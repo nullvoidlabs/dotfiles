@@ -1,0 +1,166 @@
+# 43PR/dotfiles — Fedora package map
+#
+# One package per line. "a|b" means: install the first name that exists in
+# your enabled repos (Fedora + the COPRs fedora/install.sh enables).
+# Anything not resolvable is reported at the end, never fatal.
+#
+# Arch name (upstream packages.txt)      -> Fedora name
+#
+# Not installed via dnf (handled in fedora/install.sh instead):
+#   matugen, starship, eza, cliphist   -> cargo/go build into /usr/local/bin if dnf has no package
+#   ttf-jetbrains-mono-nerd, ttf-iosevka-nerd -> Nerd Fonts release tarballs into ~/.local/share/fonts
+#   papirus-folders                     -> upstream script from GitHub
+#   gpu-screen-recorder                 -> Flathub (official), wrapped by hypr/scripts/gsr-toggle.sh
+#   hyprmod                             -> optional, pipx (only with --with-hyprmod)
+#   power-profiles-daemon               -> only if tuned-ppd isn't already managing power profiles
+#
+# Renamed or folded in (keeps fedora/update.sh's "unmapped upstream package" check quiet):
+#   qt6-wayland -> qt6-qtwayland, xorg-xwayland -> xorg-x11-server-Xwayland,
+#   pipewire-audio -> pipewire, ttf-roboto-mono -> google-roboto-mono-fonts,
+#   otf-font-awesome -> fontawesome-6-free-fonts
+
+# --------------------------------------------------
+# Hyprland / Wayland / Desktop
+# --------------------------------------------------
+
+hyprland                         # COPR nikromen/hyprland (0.56.x, Lua config)
+hyprlock                         # COPR nikromen/hyprland
+hyprpolkitagent                  # COPR nikromen/hyprland
+quickshell|quickshell-git        # Fedora repos if present, else COPR errornointernet/quickshell
+qt6-qtwayland
+qt6-qtsvg
+qt6-qtimageformats               # .webp wallpapers in the picker
+rofi-wayland|rofi
+polkit
+
+# --------------------------------------------------
+# Desktop Portals / X11 Compatibility / User Dirs
+# --------------------------------------------------
+
+xdg-desktop-portal-hyprland      # COPR nikromen/hyprland
+xdg-desktop-portal-gtk
+xorg-x11-server-Xwayland
+xdg-user-dirs
+xdg-utils
+
+# --------------------------------------------------
+# Wallpaper / Screenshots / Image Tools
+# --------------------------------------------------
+
+awww                             # COPR nikromen/hyprland (swww's new name)
+grim
+slurp
+ImageMagick
+
+# --------------------------------------------------
+# Networking / Bluetooth
+# --------------------------------------------------
+
+NetworkManager
+network-manager-applet
+bluez                            # includes bluetoothctl on Fedora (Arch: bluez-utils)
+blueman
+
+# --------------------------------------------------
+# Audio
+# --------------------------------------------------
+
+pipewire
+pipewire-pulseaudio              # Arch: pipewire-pulse
+wireplumber
+pavucontrol
+playerctl
+
+# --------------------------------------------------
+# Clipboard
+# --------------------------------------------------
+
+cliphist
+wl-clipboard
+
+# --------------------------------------------------
+# Terminal / Shell
+# --------------------------------------------------
+
+kitty
+zsh
+zsh-autosuggestions
+zsh-syntax-highlighting
+starship
+eza
+
+# --------------------------------------------------
+# File Manager / File Utilities
+# --------------------------------------------------
+
+Thunar
+thunar-volman
+thunar-archive-plugin
+gvfs
+tumbler
+ffmpegthumbnailer
+xed
+ncdu
+zenity
+
+# --------------------------------------------------
+# GTK / Theming / Icons / Appearance
+# --------------------------------------------------
+
+gtk3
+gtk4
+glib2
+dconf
+gsettings-desktop-schemas
+adw-gtk3-theme                   # Arch: adw-gtk-theme
+papirus-icon-theme
+gnome-themes-extra
+nwg-look
+
+# --------------------------------------------------
+# Media
+# --------------------------------------------------
+
+mpv
+
+# --------------------------------------------------
+# System Monitoring / Hardware
+# --------------------------------------------------
+
+btop
+nvtop
+dmidecode
+brightnessctl
+gammastep
+lm_sensors
+pciutils                         # lspci, used by the System settings page
+upower
+
+# --------------------------------------------------
+# Notifications / Visualizers
+# --------------------------------------------------
+
+libnotify
+cava
+fastfetch
+cmatrix
+
+# --------------------------------------------------
+# Fonts (Nerd Fonts are fetched separately)
+# --------------------------------------------------
+
+jetbrains-mono-fonts-all
+google-roboto-mono-fonts
+fontawesome-6-free-fonts|fontawesome-fonts-all|fontawesome4-fonts
+
+# --------------------------------------------------
+# Scripting / Utilities
+# --------------------------------------------------
+
+python3
+jq
+flatpak
+curl
+unzip
+git
+procps-ng

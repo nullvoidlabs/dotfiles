@@ -7,7 +7,7 @@ mainMod    = "SUPER"
 terminal   = "kitty"
 menu       = "rofi -show drun"
 fileManager = "thunar"
-browser    = "brave"
+browser    = "firefox" -- Fedora default; upstream uses "brave"
 
 ---- AUTOSTART ----
 
@@ -16,7 +16,9 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("nm-applet")
     hl.exec_cmd("wl-paste --type text --watch cliphist store")
     hl.exec_cmd("wl-paste --type image --watch cliphist store")
-    hl.exec_cmd("/usr/lib/polkit-kde-authentication-agent-1")
+    -- Polkit agent: hyprpolkitagent (in packages.txt). Path differs per distro:
+    -- Fedora /usr/libexec, Arch /usr/lib/hyprpolkitagent.
+    hl.exec_cmd("/usr/libexec/hyprpolkitagent || /usr/lib/hyprpolkitagent/hyprpolkitagent")
 
     hl.exec_cmd("awww-daemon")
     hl.exec_cmd("~/.config/hypr/scripts/wallpaper-restore.sh")

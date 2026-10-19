@@ -122,7 +122,8 @@ Item {
             "sh", "-c",
             "p() { printf '%s %s\\n' \"$1\" \"${2:-0}\"; }; " +
             "p YAY \"$(du -sb \"$HOME/.cache/yay\" 2>/dev/null | awk '{print $1}')\"; " +
-            "p PACMAN \"$(du -sb /var/cache/pacman/pkg 2>/dev/null | awk '{print $1}')\"; " +
+            // Arch: pacman package cache. Fedora: dnf5 (/var/cache/libdnf5) or dnf4 (/var/cache/dnf)
+            "p PACMAN \"$(du -sbc /var/cache/pacman/pkg /var/cache/libdnf5 /var/cache/dnf 2>/dev/null | tail -n1 | awk '{print $1}')\"; " +
             "p JOURNAL \"$(journalctl --disk-usage 2>/dev/null | grep -oE '[0-9.]+ ?[BKMGT]' | tail -1 | tr -d ' ')\"; " +
             "p TRASH \"$(du -sb \"$HOME/.local/share/Trash\" 2>/dev/null | awk '{print $1}')\"; " +
             "p FLATPAK \"$(flatpak uninstall --unused --assumeno 2>/dev/null | grep -oE '[0-9.]+ ?(kB|MB|GB|TB)' | tail -1 | tr -d ' ')\"; " +
@@ -365,15 +366,12 @@ Item {
                                 message: "This permanently deletes everything in ~/.cache/quickshell/thumbs.\n\nCommand: rm -rf -- \"$HOME/.cache/quickshell/thumbs/\"*",
                                 command: "rm -rf -- \"$HOME/.cache/quickshell/thumbs/\"*"
                             },
+                            // Fedora: no AUR cache, and the package cache is dnf's (the
+                            // "pacman" key is kept so the size probe above still maps to it)
                             {
-                                key: "yay", label: "YAY CACHE", action: "CLEAN", title: "CLEAR YAY CACHE?",
-                                message: "This permanently deletes cached AUR build files and downloaded sources.\n\nCommand: rm -rf -- \"$HOME/.cache/yay/\"*",
-                                command: "rm -rf -- \"$HOME/.cache/yay/\"*"
-                            },
-                            {
-                                key: "pacman", label: "PACMAN CACHE", action: "CLEAN", title: "CLEAN PACMAN CACHE?",
-                                message: "This removes old cached package versions while keeping the 3 most recent versions by default.\n\nCommand: pkexec paccache -r",
-                                command: "pkexec paccache -r"
+                                key: "pacman", label: "DNF CACHE", action: "CLEAN", title: "CLEAN DNF CACHE?",
+                                message: "This removes downloaded package files and repo metadata from the dnf cache. Metadata is re-downloaded on the next dnf run.\n\nCommand: pkexec dnf clean all",
+                                command: "pkexec dnf clean all"
                             },
                             {
                                 key: "journal", label: "JOURNAL", action: "7 DAYS", title: "VACUUM JOURNAL?",

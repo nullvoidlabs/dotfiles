@@ -37,7 +37,9 @@ find "$wallpaper_path" -type f \( \
     fi
 
     echo "Generating thumbnail for $filename"
-    convert "$img" -thumbnail x500 -strip -quality 85 "$out" &
+    # ImageMagick 7 uses `magick`; `convert` is a deprecated alias some distros drop
+    if command -v magick >/dev/null 2>&1; then im=magick; else im=convert; fi
+    "$im" "$img" -thumbnail x500 -strip -quality 85 "$out" &
 
     if (( cache_batch_size > 0 )); then
         while (( $(jobs -rp | wc -l) >= cache_batch_size )); do

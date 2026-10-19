@@ -76,20 +76,8 @@ hl.bind(mainMod .. " + Space", function()
     end
 end)
 
--- Gpu screen recorder
-hl.bind(mainMod .. " + R", hl.dsp.exec_cmd([==[bash -c '
-PIDFILE="${XDG_RUNTIME_DIR:-/tmp}/gsr.pid"
-if [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE")" 2>/dev/null; then
-    kill -INT "$(cat "$PIDFILE")"
-    rm -f "$PIDFILE"
-else
-    DIR="$(xdg-user-dir VIDEOS 2>/dev/null || echo "$HOME/Videos")"
-    mkdir -p "$DIR"
-    MON="$(hyprctl monitors | awk "/^Monitor/{n=\$2} /focused: yes/{print n}")"
-    gpu-screen-recorder -w "${MON:-screen}" -f 60 -a default_output -o "$DIR/$(date +%Y-%m-%d_%H-%M-%S).mp4" &
-    echo $! > "$PIDFILE"
-fi
-']==]))
+-- Gpu screen recorder (native binary or Flatpak; see scripts/gsr-toggle.sh)
+hl.bind(mainMod .. " + R", hl.dsp.exec_cmd(home .. "/.config/hypr/scripts/gsr-toggle.sh"))
 
 -- Zoom
 local function zoomfunction(value)

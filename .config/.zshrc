@@ -68,14 +68,23 @@ setopt HIST_REDUCE_BLANKS
 # Autosuggestions
 # --------------------------------------------------
 
+# Plugin paths differ per distro (Arch: /usr/share/zsh/plugins/<name>, Fedora: /usr/share/<name>)
+_43pr_source_plugin() {
+    local f
+    for f in "/usr/share/zsh/plugins/$1/$1.zsh" "/usr/share/$1/$1.zsh"; do
+        [[ -r "$f" ]] && { source "$f"; return 0; }
+    done
+}
+
 ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=8'
-source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
+_43pr_source_plugin zsh-autosuggestions
 
 # --------------------------------------------------
 # Syntax highlighting (keep LAST)
 # --------------------------------------------------
 
-source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+_43pr_source_plugin zsh-syntax-highlighting
+unfunction _43pr_source_plugin
 
 ZSH_HIGHLIGHT_STYLES[command]='fg=white'
 ZSH_HIGHLIGHT_STYLES[builtin]='fg=white'
