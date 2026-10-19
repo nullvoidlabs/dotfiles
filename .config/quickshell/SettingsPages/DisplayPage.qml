@@ -10,7 +10,7 @@ Item {
     property var monitors: []
     property var savedState: ({})
     property real marginLeft: 0
-    property real marginRight: 55
+    property real marginRight: 10
     property real marginTop: 0
     property real marginBottom: 0
     property real brightnessValue: 0.6
@@ -634,7 +634,7 @@ Item {
 
             Text {
                 text: "DISPLAY"; color: Theme.text
-                font.family: Theme.fontFamily; font.pixelSize: 19; font.letterSpacing: 3
+                font.family: Theme.fontFamily; font.pixelSize: Theme.textSizeTitle; font.letterSpacing: 3
             }
 
             Rectangle { width: parent.width; height: 1; color: Theme.border }
@@ -647,14 +647,14 @@ Item {
                     color: Theme.alpha(Theme.accent2, 0.10); border.width: 1; border.color: Theme.border
                     Text {
                         anchors.centerIn: parent; text: "\uf185"; color: Theme.accent2
-                        font.family: Theme.iconFont; font.pixelSize: 12
+                        font.family: Theme.iconFont; font.pixelSize: Theme.textSizeGroup
                     }
                 }
 
                 Text {
                     width: page.labelWidth; anchors.verticalCenter: parent.verticalCenter
                     text: "BRIGHTNESS"; color: Theme.text
-                    font.family: Theme.fontFamily; font.pixelSize: 15
+                    font.family: Theme.fontFamily; font.pixelSize: Theme.textSizeGroup
                 }
 
                 Slider {
@@ -670,15 +670,17 @@ Item {
 
                 Rectangle {
                     width: 28; height: 28; radius: Theme.radius; anchors.verticalCenter: parent.verticalCenter
-                    color: page.nightlightEnabled ? Theme.alpha(Theme.accent, 0.10) : Theme.alpha("#A0A0A0", 0.15)
-                    border.width: 1; border.color: page.nightlightEnabled ? Theme.accent : Theme.border
+                    color: page.nightlightEnabled ? Theme.alpha(Theme.accent, 0.10) : (nightlightMouse.containsMouse ? Theme.alpha(Theme.accent, 0.08) : Theme.alpha("#A0A0A0", 0.15))
+                    border.width: 1; border.color: page.nightlightEnabled || nightlightMouse.containsMouse ? Theme.accent : Theme.border
                     Text {
                         anchors.centerIn: parent; text: "\uf186"
-                        color: page.nightlightEnabled ? Theme.accent : "#A0A0A0"
-                        font.family: Theme.iconFont; font.pixelSize: 12
+                        color: page.nightlightEnabled || nightlightMouse.containsMouse ? Theme.accent : "#A0A0A0"
+                        font.family: Theme.iconFont; font.pixelSize: Theme.textSizeGroup
                     }
                     MouseArea {
-                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                        id: nightlightMouse
+                        anchors.fill: parent; hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
                         onClicked: page.nightlightEnabled ? page.nightlightOff() : page.nightlightOn()
                     }
                 }
@@ -686,7 +688,7 @@ Item {
                 Text {
                     width: page.labelWidth; anchors.verticalCenter: parent.verticalCenter
                     text: "NIGHTLIGHT"; color: page.nightlightEnabled ? Theme.text : Theme.text
-                    font.family: Theme.fontFamily; font.pixelSize: 15
+                    font.family: Theme.fontFamily; font.pixelSize: Theme.textSizeGroup
                 }
 
                 Slider {
@@ -736,13 +738,13 @@ Item {
                                     Text {
                                         text: card.modelData.name
                                         color: card.off ? Theme.textDim : Theme.text
-                                        font.family: Theme.fontFamily; font.pixelSize: 14; font.bold: true
+                                        font.family: Theme.fontFamily; font.pixelSize: Theme.textSizeSection; font.bold: true
                                     }
 
                                     Text {
                                         visible: !card.off
                                         text: card.modelData.width + "x" + card.modelData.height + " @ " + Math.round(card.modelData.refreshRate) + "Hz"
-                                        color: Theme.textDim; font.family: Theme.fontFamily; font.pixelSize: 12
+                                        color: Theme.textDim; font.family: Theme.fontFamily; font.pixelSize: Theme.textSizeGroup
                                     }
                                 }
 
@@ -762,7 +764,7 @@ Item {
                                             anchors.centerIn: parent
                                             text: card.main ? "MAIN" : "SET MAIN"
                                             color: card.main ? Theme.accent : Theme.text
-                                            font.family: Theme.fontFamily; font.pixelSize: 11; font.bold: true; font.letterSpacing: 1
+                                            font.family: Theme.fontFamily; font.pixelSize: Theme.textSizeBody; font.bold: true; font.letterSpacing: 1
                                         }
 
                                         MouseArea {
@@ -785,7 +787,7 @@ Item {
                                             anchors.centerIn: parent
                                             text: card.off ? "ENABLE" : "DISABLE"
                                             color: Theme.text
-                                            font.family: Theme.fontFamily; font.pixelSize: 11; font.bold: true; font.letterSpacing: 1
+                                            font.family: Theme.fontFamily; font.pixelSize: Theme.textSizeBody; font.bold: true; font.letterSpacing: 1
                                         }
 
                                         MouseArea {
@@ -806,7 +808,7 @@ Item {
                                     id: scaleLabel
                                     width: 36; anchors.verticalCenter: parent.verticalCenter
                                     text: "SCALE"; color: Theme.textDim
-                                    font.family: Theme.fontFamily; font.pixelSize: 11
+                                    font.family: Theme.fontFamily; font.pixelSize: Theme.textSizeBody
                                 }
 
                                 Slider {
@@ -822,7 +824,7 @@ Item {
                                     horizontalAlignment: Text.AlignRight
                                     text: card.modelData.scale.toFixed(2) + "x"
                                     color: Theme.text
-                                    font.family: Theme.fontFamily; font.pixelSize: 11
+                                    font.family: Theme.fontFamily; font.pixelSize: Theme.textSizeBody
                                 }
                             }
 
@@ -834,7 +836,7 @@ Item {
                                     width: 36; height: 28
                                     verticalAlignment: Text.AlignVCenter
                                     text: "RES"; color: Theme.textDim
-                                    font.family: Theme.fontFamily; font.pixelSize: 11
+                                    font.family: Theme.fontFamily; font.pixelSize: Theme.textSizeBody
                                 }
 
                                 Flow {
@@ -856,7 +858,7 @@ Item {
                                                 anchors.centerIn: parent
                                                 text: resButton.modelData
                                                 color: Theme.text
-                                                font.family: Theme.fontFamily; font.pixelSize: 11; font.bold: true
+                                                font.family: Theme.fontFamily; font.pixelSize: Theme.textSizeBody; font.bold: true
                                             }
 
                                             MouseArea {
@@ -881,7 +883,7 @@ Item {
                                     width: 36; height: 28
                                     verticalAlignment: Text.AlignVCenter
                                     text: "HZ"; color: Theme.textDim
-                                    font.family: Theme.fontFamily; font.pixelSize: 11
+                                    font.family: Theme.fontFamily; font.pixelSize: Theme.textSizeBody
                                 }
 
                                 Flow {
@@ -903,7 +905,7 @@ Item {
                                                 anchors.centerIn: parent
                                                 text: rateButton.modelData.toFixed(2)
                                                 color: Theme.text
-                                                font.family: Theme.fontFamily; font.pixelSize: 11; font.bold: true
+                                                font.family: Theme.fontFamily; font.pixelSize: Theme.textSizeBody; font.bold: true
                                             }
 
                                             MouseArea {
@@ -926,7 +928,7 @@ Item {
                                     width: 36; height: 28
                                     verticalAlignment: Text.AlignVCenter
                                     text: "OF"; color: Theme.textDim
-                                    font.family: Theme.fontFamily; font.pixelSize: 11
+                                    font.family: Theme.fontFamily; font.pixelSize: Theme.textSizeBody
                                 }
 
                                 Flow {
@@ -948,7 +950,7 @@ Item {
                                                 anchors.centerIn: parent
                                                 text: refButton.modelData
                                                 color: Theme.text
-                                                font.family: Theme.fontFamily; font.pixelSize: 11; font.bold: true
+                                                font.family: Theme.fontFamily; font.pixelSize: Theme.textSizeBody; font.bold: true
                                             }
 
                                             MouseArea {
@@ -971,7 +973,7 @@ Item {
                                     width: 36; height: 28
                                     verticalAlignment: Text.AlignVCenter
                                     text: "POS"; color: Theme.textDim
-                                    font.family: Theme.fontFamily; font.pixelSize: 11
+                                    font.family: Theme.fontFamily; font.pixelSize: Theme.textSizeBody
                                 }
 
                                 Flow {
@@ -994,7 +996,7 @@ Item {
                                                 anchors.centerIn: parent
                                                 text: posButton.modelData
                                                 color: Theme.text
-                                                font.family: Theme.fontFamily; font.pixelSize: 11; font.bold: true
+                                                font.family: Theme.fontFamily; font.pixelSize: Theme.textSizeBody; font.bold: true
                                             }
 
                                             MouseArea {
@@ -1020,7 +1022,7 @@ Item {
 
                 Text {
                     anchors.centerIn: parent; text: "RESET TO CONFIG"; color: Theme.text
-                    font.family: Theme.fontFamily; font.pixelSize: 12; font.bold: true; font.letterSpacing: 1
+                    font.family: Theme.fontFamily; font.pixelSize: Theme.textSizeGroup; font.bold: true; font.letterSpacing: 1
                 }
 
                 MouseArea {
