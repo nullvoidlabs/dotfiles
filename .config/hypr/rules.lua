@@ -8,10 +8,23 @@ hl.layer_rule({
     ignore_alpha = 0.15,
 })
 
--- Opacity rules for all windows except fullscreen
+-- Opacity rules for all windows except fullscreen.
+-- Default 0.7. Super + O saves your pick to ~/.local/state/43pr/opacity
+-- (outside the repo), so changing it doesn't leave this file modified.
+local window_opacity = "0.7"
+do
+    local state = (os.getenv("XDG_STATE_HOME") or (os.getenv("HOME") .. "/.local/state")) .. "/43pr/opacity"
+    local fh = io.open(state, "r")
+    if fh then
+        local v = tonumber(fh:read("*l") or "")
+        fh:close()
+        if v and v >= 0.1 and v <= 1.0 then window_opacity = string.format("%.2f", v) end
+    end
+end
+
 hl.window_rule({
     match = { class = ".*" },
-    opacity = "0.7 override",
+    opacity = window_opacity .. " override",
 })
 
 hl.window_rule({

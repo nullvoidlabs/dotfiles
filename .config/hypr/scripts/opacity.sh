@@ -13,7 +13,10 @@ case "$choice" in
     *) exit 0 ;;
 esac
 
-sed -i --follow-symlinks "0,/opacity = \".* override\"/s//opacity = \"$opacity override\"/" ~/.config/hypr/rules.lua
+# Saved outside the repo; hypr/rules.lua reads it on every (re)load.
+state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/43pr"
+mkdir -p "$state_dir"
+printf '%s\n' "$opacity" > "$state_dir/opacity"
 sed -i -E "s/(bg:[[:space:]]*#[0-9A-Fa-f]{6})([0-9A-Fa-f]{2})?;/\1$alpha;/" ~/.config/rofi/colors.rasi
 
 hyprctl reload
