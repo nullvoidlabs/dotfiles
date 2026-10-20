@@ -1,10 +1,35 @@
 # 43PR Desktop — Fedora port
 
-Fedora port of [43PR/dotfiles](https://github.com/43PR/dotfiles) by **43PR**. All design, configs and the Quickshell desktop are his work; this branch only adapts installation and a few distro-specific lines for Fedora. Maintained by [NullVoidLabs](https://nullvoidlabs.io). If you like the setup, support the original author ([YouTube](https://www.youtube.com/@43PR2), [Ko-fi](https://ko-fi.com/43pr)).
+A Fedora port of [43PR/dotfiles](https://github.com/43PR/dotfiles), a Hyprland + Quickshell desktop by **43PR**. The design, configs and Quickshell desktop are his. This fork:
 
-Same configs, same symlink model. Last rebased onto upstream commit `7274604` (2026-10-19).
+- makes it install and run on Fedora (dnf, COPRs, Flathub instead of pacman and the AUR);
+- fixes what a bare Hyprland session on Fedora doesn't do on its own (file pickers, file associations, cursor size shared with GNOME);
+- adds a handful of usability fixes found while daily-driving it (wallpaper picker, Super + S menu, keybinds, touchpad).
 
-**Requires Fedora 43, 44 or 45 (x86_64).** The config uses Hyprland's Lua format, which needs Hyprland 0.55+. Fedora retired its own hyprland package, so this comes from the `nikromen/hyprland` COPR (0.56.x; the maintainer patches it to build against Fedora's Lua 5.4 on F43/44).
+Everything stays compatible with Arch, so the Fedora commits rebase cleanly onto new upstream work. Maintained by [NullVoidLabs](https://nullvoidlabs.io).
+
+If you like the setup, support the original author: [YouTube](https://www.youtube.com/@43PR2) · [Ko-fi](https://ko-fi.com/43pr) · [Discord](https://discord.gg/HQwU9SzHj)
+
+> Last rebased onto upstream commit `7274604` (2026-10-19).
+
+## Contents
+
+- [Requirements](#requirements)
+- [Install](#install)
+- [Updating](#updating)
+- [Keybinds that differ from upstream](#keybinds-that-differ-from-upstream)
+- [What's different from upstream](#whats-different-from-upstream)
+- [Living alongside GNOME](#living-alongside-gnome)
+- [Known issues](#known-issues)
+- [Troubleshooting](#troubleshooting)
+- [Security notes](#security-notes)
+- [Credits and license](#credits-and-license)
+
+## Requirements
+
+- **Fedora 43, 44 or 45, x86_64.** Tested on Fedora 44 Workstation, logging in from GDM.
+- The config uses Hyprland's **Lua** format, which needs **Hyprland 0.55+**. Fedora retired its own `hyprland` package, so it comes from the [`nikromen/hyprland`](https://github.com/nikromen/hyprland-rpm) COPR (0.56.x, patched to build against Fedora's Lua 5.4 on F43/44).
+- A clean-ish setup is easiest. Anything the installer replaces in `~/.config` is backed up first.
 
 ## Install
 
@@ -14,86 +39,146 @@ cd ~/dotfiles
 ./fedora/install.sh
 ```
 
-Then log out, pick **Hyprland** from the gear icon on the GDM login screen, and log in.
+Then log out. On the GDM login screen, click your name, then the gear icon, pick **Hyprland**, and log in. Put wallpapers in `~/Pictures/Wallpapers` and press **Super + W**.
 
-Flags: `--yes` (no prompts), `--with-brave` (add Brave's official repo and install it), `--with-hyprmod` (also install HyprMod via pipx), `--skip-packages` (relink + theme only).
+**Don't move or delete `~/dotfiles` afterwards.** `~/.config` is symlinked into it. If you do move it, run `./fedora/install.sh --skip-packages` from the new location to repoint the links.
+
+| Flag | Effect |
+|---|---|
+| `--yes` | No prompts |
+| `--with-brave` | Add Brave's official RPM repo and install `brave-browser` (Super + B prefers Brave, falls back to Firefox) |
+| `--with-hyprmod` | Also install [HyprMod](https://github.com/BlueManCZ/hyprmod), a GUI keybind/settings editor, via pipx |
+| `--skip-packages` | Only relink configs, install the systemd unit, regenerate the theme |
+
+What the installer does:
+
+1. Asks before enabling third-party sources: COPR `nikromen/hyprland`, COPR `errornointernet/quickshell` (only if Fedora's repos lack Quickshell), Flathub for gpu-screen-recorder.
+2. Installs [`fedora/packages.txt`](packages.txt) with dnf. Each line may list alternatives; the first one available wins, and anything missing is reported at the end instead of aborting.
+3. Builds what Fedora doesn't package (matugen, starship, eza, cliphist) into `/usr/local/bin`, and fetches Nerd Fonts, papirus-folders and zsh-autocomplete.
+4. Symlinks `.config/` into `~/.config`, with backups to `~/.config-backups/<timestamp>/`.
+5. Installs `hyprland-session.target`, sets zsh as your login shell, sets default apps only where none are set, and generates the initial theme.
 
 ## Updating
 
 ```bash
 cd ~/dotfiles
-git pull                      # this fork's fedora branch
+git pull
 ./fedora/update.sh            # --dry-run, --skip-packages, --skip-theme, --restart-shell
 ```
 
-The Settings → Updates page runs the same thing ("Update desktop") and uses dnf for system packages.
+**Settings → Updates** does the same from the desktop. It counts and installs dnf and Flatpak updates, and "Update desktop" runs `fedora/update.sh`.
 
-Maintainer flow for pulling in new upstream work:
+`update.sh` installs newly listed packages, links new files, never overwrites real files you created, and warns when upstream's `packages.txt` gains something `fedora/packages.txt` doesn't cover yet.
+
+<details>
+<summary>Maintainer: pulling in new upstream work</summary>
 
 ```bash
 git remote add upstream https://github.com/43PR/dotfiles.git   # once
 git fetch upstream
-git rebase upstream/main      # replays the Fedora commits on top
+git rebase upstream/main          # replays the Fedora commits on top
 git push --force-with-lease origin fedora
 ```
 
-`update.sh` warns when upstream's `packages.txt` gains a package that `fedora/packages.txt` doesn't map yet.
+After a rebase, grep new upstream code for Arch-only commands (`pacman`, `checkupdates`, `paru`, `yay`, `/usr/share/zsh/plugins`, `/usr/lib/`) and update the "Last rebased" commit above.
+</details>
 
-## What's different from the Arch version
+## Keybinds that differ from upstream
+
+Everything else matches [upstream's keybind table](../README.md#keybinds).
+
+| Keybind | Upstream | This fork |
+|---|---|---|
+| `Print` | — | Screenshot, full screen |
+| `Shift + Print` | — | Screenshot, area select |
+| `Delete` / `Shift + Delete` | Screenshots | Normal Delete |
+| `Fn + Brightness` | 5% steps | 2% steps |
+| `Super + B` | `brave` (doesn't exist on Fedora) | Brave → Brave Flatpak → Firefox |
+| Touchpad, 2-finger **press** | Left click | Right click (3 fingers = middle) |
+| Touchpad scrolling | Traditional | Natural (content follows your fingers) |
+
+**Super + S** (quick actions): the brightness item now responds to click/Enter (brighter) and right-click (dimmer) as well as scrolling.
+
+**Super + W** (wallpaper picker): ← / → (also H/L, A/D; hold Shift to move 3), Home / End, Enter or Space to apply, Esc or W to close. Click a tile to select it, click it again to apply.
+
+## What's different from upstream
+
+### Packaging
 
 | Area | Arch (upstream) | Fedora port |
 |---|---|---|
-| Hyprland, hyprlock, hyprpolkitagent, awww, portal | official repos | COPR `nikromen/hyprland` |
-| Quickshell | official repos | Fedora repos, else COPR `errornointernet/quickshell` |
-| matugen, starship, eza, cliphist | official repos | dnf if packaged, else built with cargo/go into `/usr/local/bin` |
+| Hyprland, hyprlock, hyprpolkitagent, awww, portal | Official repos | COPR `nikromen/hyprland` |
+| Quickshell | Official repos | Fedora repos, else COPR `errornointernet/quickshell` |
+| matugen, starship, eza, cliphist | Official repos | dnf if packaged, else built with cargo/go into `/usr/local/bin` |
+| zsh-autocomplete | Expected at the Arch path (not in upstream's package list) | Cloned at its newest release tag into `~/.local/share/zsh/zsh-autocomplete` |
 | Nerd Fonts | `ttf-*-nerd` | Release tarballs into `~/.local/share/fonts/NerdFonts` |
-| papirus-folders, hyprmod | AUR | GitHub script / pipx (hyprmod is opt-in) |
-| gpu-screen-recorder | official repos | Flathub (official route off Arch) via `hypr/scripts/gsr-toggle.sh` |
-| Power profiles | power-profiles-daemon | Fedora's tuned-ppd is left alone; see below |
-| Login shell | `chsh` | `usermod` (Fedora doesn't ship `chsh` by default) |
+| papirus-folders, HyprMod | AUR | GitHub script / pipx (HyprMod is opt-in) |
+| gpu-screen-recorder | Official repos | Flathub, wrapped by `hypr/scripts/gsr-toggle.sh` |
+| Power profiles | power-profiles-daemon | Fedora's tuned-ppd is left alone (see [Known issues](#known-issues)) |
+| Login shell | `chsh` | `usermod` (`chsh` isn't installed by default on Fedora) |
+| Package cleanup (Settings → Storage) | yay + pacman caches | dnf cache (`pkexec dnf clean all`) |
+| System updates (Settings → Updates) | pacman + AUR | dnf (`repoquery --upgrades`, `dnf upgrade --refresh`) |
 
-Config edits (all still work on Arch, so the patch stays rebase-friendly):
+### Session fixes for Fedora
 
-- `hypr/hyprland.lua`:
-  - Polkit agent was `/usr/lib/polkit-kde-authentication-agent-1` (not in upstream's package list); now `hyprpolkitagent` with Fedora and Arch paths.
-  - Browser: `brave-browser`, falling back to the Brave Flatpak, then Firefox (upstream's `brave` command doesn't exist on Fedora).
-  - Touchpad `natural_scroll = true` (content follows your fingers) and `clickfinger_behavior = true` (two-finger press = right click, three = middle).
-- `hypr/keybinds.lua`: screenshots on **Print** (full) and **Shift + Print** (area) instead of Delete / Shift + Delete, so Delete works as Delete again. Fn brightness keys step 2% instead of 5%.
-- `quickshell/Wheel.qml` (Super + S): dims the screen behind it, adds a backdrop disc, fills the segments and strengthens the lines so it reads on busy windows. Brightness item: click/Enter brightens, right-click dims, scroll works both ways, 2% steps.
-- `hypr/rules.lua` + `scripts/opacity.sh`: Super + O saves to `~/.local/state/43pr/opacity` instead of editing `rules.lua`, so the repo stays clean (default 70%).
-- `hypr/.luarc.json`: tells Lua language servers that `hl` and the shared config globals exist, so editors stop flagging every line.
-- `gtk-3.0/gtk-4.0 settings.ini`: cursor size 14 → 24. See "Cursor size" below.
-- `hypr/keybinds.lua`: Super+R calls `scripts/gsr-toggle.sh` (native or Flatpak recorder, same pidfile for the OSD).
-- `.zshrc`: plugin paths checked for both `/usr/share/zsh/plugins/<name>` (Arch) and `/usr/share/<name>` (Fedora).
-- `quickshell/SettingsPages/StoragePage.qml`: YAY/PACMAN cache rows → one DNF CACHE row (`pkexec dnf clean all`).
-- `quickshell/SettingsPages/UpdatesPage.qml`: counts and installs system updates with dnf (`repoquery --upgrades`, `dnf upgrade --refresh`); "Update desktop" runs `fedora/update.sh`. AUR row shows N/A.
-- Wallpaper picker (Super + W):
-  - `cache.sh`: one run at a time (reopening the picker started a second run that wrote half-finished thumbnails), atomic writes, parallel jobs capped at CPU count with one thread each, `.webp` thumbnails, stale thumbnails removed, prefers `magick` over `convert`.
-  - `shell.qml`: tile shadows rendered at quarter resolution (full-size blur on every tile, every frame, was the main scroll lag); thumbnail retries back off and stop after ~1 min; keyboard works: ←/→ (or H/L, A/D, Shift for 3), Home/End, Enter/Space to apply. Before, arrows moved a different internal index than the highlight, so Space could apply the wrong wallpaper. Opens centered on the current wallpaper; every tile, including the first ones, can be centered; each step is a fixed 220 ms move; the selected tile is full brightness with a white frame and its file name, the rest are dimmed. Click selects, click again applies; no hover-select (tiles sliding under the cursor kept changing the selection).
-- `hypr/hyprland.lua` autostart: imports the session environment into systemd/D-Bus and starts `hyprland-session.target` (installed from `fedora/systemd/` into `~/.config/systemd/user/`). Without it, `xdg-desktop-portal` fails with result `dependency` because `graphical-session.target` is never active under a bare Hyprland session. Apps then fall back to built-in file pickers (Enter doesn't save in Brave's) and screen sharing breaks.
+- **Portals (file pickers, screen sharing).** Under a Hyprland session started straight from GDM, `graphical-session.target` is never active, so `xdg-desktop-portal` fails with result `dependency`. Apps then fall back to their built-in file pickers (in Brave, Enter didn't save) and screen sharing breaks. `fedora/systemd/hyprland-session.target` binds that target, and `hyprland.lua` imports the session environment and starts it at login.
+- **Polkit agent.** Upstream launched `/usr/lib/polkit-kde-authentication-agent-1`, which isn't in its own package list. The fork uses `hyprpolkitagent` at the Fedora path, with the Arch path as fallback.
+- **File types.** Outside GNOME/KDE, `xdg-open` falls back to content sniffing, so text-based files like Proxmox SPICE `.vv` looked like `text/plain` and opened in calibre. `perl-File-MimeInfo` lets it match by extension.
+- **zsh plugins** are looked up at both the Arch (`/usr/share/zsh/plugins/<name>`) and Fedora (`/usr/share/<name>`) paths.
 
-## Desktop integration a bare Hyprland session doesn't do for you
+### Usability fixes and tweaks
 
-The installer and `update.sh` handle these; each only acts when you haven't already chosen something.
+- **Wallpaper picker (Super + W)**
+  - Opens centered on the current wallpaper. Upstream's position math put the selected tile at the left edge, so it opened off-center and the first tiles could never be centered.
+  - Steady movement: a fixed 220 ms per step, one tile per wheel notch, and no hover-to-select (tiles sliding under the cursor kept changing the selection mid-move).
+  - Keyboard navigation works. The arrow keys used to move a different internal index than the highlight, so Space could apply the wrong wallpaper.
+  - Clear selection: full brightness, a white frame and the file name; the rest are dimmed. The frame color was `transparent`.
+  - Less lag: tile shadows render at quarter resolution, thumbnail generation runs one copy at a time, capped at CPU count with one thread per job, with atomic writes, `.webp` support and stale-thumbnail cleanup.
+- **Quick actions (Super + S)**: a soft dim behind it, a backdrop disc, filled segments and stronger lines, so it reads over busy windows. Same thin-line look, theme colors only.
+- **Opacity (Super + O)** saves to `~/.local/state/43pr/opacity` instead of rewriting `hypr/rules.lua`, so changing it doesn't leave the repo modified. The default stays 70%.
+- **Prompt**: git status shown in `[ ]` again. Fixed starship's `stashed = "$"`, which warned on every prompt.
+- **Editors**: `hypr/.luarc.json` declares `hl` and the shared config globals, so Lua language servers stop flagging every line.
 
-- **File type detection.** Outside GNOME/KDE, `xdg-open` falls back to `file --mime-type`, which sniffs contents. Text-based formats like Proxmox SPICE `.vv` files then look like `text/plain` and open in whatever claims plain text (calibre). `perl-File-MimeInfo` provides `mimetype`, which matches by extension, and `xdg-open` prefers it.
-- **Default apps** (`~/.config/mimeapps.list`, shared with GNOME): `.vv` → remote-viewer, `text/plain` → xed (only if unset or calibre), default browser → Brave (only if unset or Firefox).
-- **Portals.** `hyprland-session.target` (see above) so file pickers and screen sharing work.
+## Living alongside GNOME
 
-## Cursor size
+GNOME and Hyprland share the same user settings: the GTK `settings.ini` files, `~/.config/mimeapps.list` and the `org.gnome.desktop.interface` keys. So:
 
-Hyprland keeps `XCURSOR_SIZE=14` (upstream's value). Cursor themes ship fixed sizes (Adwaita: 24, 32, 48…), and Hyprland snaps 14 to the nearest real one, so it looks like 24. GNOME draws vector cursors at the exact requested size, so the same 14 in the shared GTK settings made the cursor tiny when switching back to GNOME. The GTK files now say 24, which looks identical in Hyprland and normal in GNOME. Existing installs with exactly 14 are migrated; any other value is left alone.
+- **Cursor size.** Hyprland keeps `XCURSOR_SIZE=14`, which it snaps to the theme's nearest real size (24). GNOME draws vector cursors at the exact size, so the shared GTK value of 14 made GNOME's cursor tiny. The GTK files now say 24, which looks the same in Hyprland. Existing installs set to exactly 14 are migrated; other values are left alone.
+- **Default apps.** Set only where nothing is chosen yet: `.vv` → remote-viewer, `text/plain` → xed (if unset or calibre), browser → Brave (if unset or Firefox). They apply in GNOME too.
+- **Light/dark toggle (Super + L)** also switches GNOME's color scheme.
+- **nwg-look** writes to GNOME's settings. Changing the cursor size there changes GNOME too.
 
-If GNOME's cursor is still small, nwg-look or a GNOME setting changed it globally: `gsettings reset org.gnome.desktop.interface cursor-size`.
+## Known issues
 
-## Known gaps
-
-- **Settings > Power**: needs `powerprofilesctl`. Fedora Workstation uses tuned-ppd, which conflicts with power-profiles-daemon. The installer won't swap them for you. If you want the page: `sudo dnf swap tuned-ppd power-profiles-daemon && sudo systemctl enable --now power-profiles-daemon`.
-- **Settings > System RAM details**: runs `sudo -n /usr/bin/dmidecode`, which needs a NOPASSWD sudoers rule (same as upstream). Only add it if you're fine with that trade-off.
-- **Super + L** is bound twice upstream (light/dark toggle and focus-right). Both fire. Rebind one in `hypr/keybinds.lua` if it bothers you.
-- **First recording** with the Flatpak recorder asks for your password once (its KMS capture helper needs root).
+- **Settings → Power** needs `powerprofilesctl`. Fedora Workstation uses tuned-ppd, which conflicts with power-profiles-daemon, and the installer won't swap them for you. To use the page: `sudo dnf swap tuned-ppd power-profiles-daemon && sudo systemctl enable --now power-profiles-daemon`.
+- **Settings → System RAM details** runs `sudo -n /usr/bin/dmidecode`, which needs a NOPASSWD sudoers rule (same as upstream). Only add one if you accept that trade-off.
+- **COPR in-between states.** `dnf upgrade` may skip `hyprtoolkit` / `hyprland-guiutils` ("conflicts" / "broken dependencies") right after the COPR maintainer bumps a library and before everything is rebuilt. dnf keeps the installed pair consistent; upgrade again in a few days. Don't use `--allowerasing`: `hyprland` requires `hyprland-guiutils`.
+- **Super + L** is bound twice upstream (light/dark toggle and focus-right), and both fire.
+- **First screen recording** with the Flatpak recorder asks for your password once (its capture helper needs root).
 - After `papirus-icon-theme` updates, re-run `papirus-folders -C white`.
-- **COPR in-between states**: `dnf upgrade` may print "Skipping packages with conflicts: hyprtoolkit" / "broken dependencies: hyprland-guiutils" right after the maintainer bumps a library but before rebuilding everything that uses it. dnf keeps your installed pair consistent; just upgrade again in a few days. Don't use `--allowerasing`: `hyprland` requires `hyprland-guiutils`.
-- **Shared with GNOME**: GTK settings, `mimeapps.list` and `org.gnome.desktop.interface` are the same files/keys in both sessions. The light/dark toggle (Super + L) also flips GNOME's color scheme.
-- **zsh-autocomplete**: upstream's `.zshrc` sources it but it isn't in upstream's package list, and Fedora doesn't package it. The installer clones it to `~/.local/share/zsh/zsh-autocomplete` at the newest release tag; `.zshrc` checks the Arch path, a distro path, then that clone. On first shell start it may clone a helper (`zasync`) into `~/.cache/zsh`.
-- **Opacity**: Super + O sets every window's opacity (upstream default is now 70%).
+- **HyprMod** writes to `hypr/hyprland-gui.lua`, a tracked file, so its changes show up in `git status`.
+
+## Troubleshooting
+
+| Symptom | Check |
+|---|---|
+| File picker / screen share broken | `systemctl --user is-active graphical-session.target xdg-desktop-portal` (both should be `active`) |
+| A file opens in the wrong app | `xdg-mime query filetype <file>` vs `gio info -a standard::content-type <file>`, then `xdg-mime default <app>.desktop <mime/type>` |
+| Tiny cursor in GNOME | `gsettings reset org.gnome.desktop.interface cursor-size` |
+| Wallpaper picker tiles stuck on "Caching" | Settings → Storage → Wallpaper picker → Clear, then reopen with Super + W |
+| Touchpad setting ignored | Settings → Input overrides `hyprland.lua` (it's saved in `~/.config/quickshell/state/devices.lua`) |
+| Which window has focus | `sleep 5; hyprctl activewindow \| grep -E 'class\|title'` |
+
+## Security notes
+
+- **Third-party sources run as root when installed.** The COPRs, Flathub and the GitHub downloads (fonts, papirus-folders, zsh-autocomplete) deserve the same trust you'd give the AUR, which is why the installer lists them and asks first.
+- **Your config is live code.** `~/.config` points into this repo, and Hyprland runs `exec` lines and keybind scripts at login. A `git pull` is effectively a code deploy into your session, so skim the diff before you pull.
+- **Shell plugins run in every terminal.** zsh-autocomplete is pinned to a release tag rather than its development branch, but it fetches a helper (`zasync`) on first start.
+- **Proxmox `.vv` files** carry a short-lived SPICE ticket and your PVE host details. Don't let them pile up in Downloads.
+
+## Credits and license
+
+- Desktop, configs and Quickshell components: [43PR](https://github.com/43PR/dotfiles), MIT-licensed. The [LICENSE](../LICENSE) and his copyright notice are kept as-is.
+- Wallpaper picker: based on [hyprquickpaper](https://github.com/iamsurjog/hyprquickpaper) by iamsurjog, as tweaked by 43PR.
+- Fedora Hyprland packaging: [nikromen/hyprland-rpm](https://github.com/nikromen/hyprland-rpm). Quickshell COPR: errornointernet.
+- Fedora port: [NullVoidLabs](https://nullvoidlabs.io).

@@ -1,3 +1,8 @@
+> [!important]
+> **This is the Fedora port of [43PR/dotfiles](https://github.com/43PR/dotfiles).** The desktop is 43PR's work; this fork makes it install and run on Fedora and adds a few fixes.
+> **Fedora users: follow [fedora/README.md](fedora/README.md)** (install, what changed, keybind differences). The `main` branch mirrors upstream; the Fedora port lives on the `fedora` branch.
+> The rest of this page is upstream's README, with the screenshot keybinds updated for this fork.
+
 <div align="center">
 
 ## 43PR Desktop
@@ -65,8 +70,8 @@ Right-click the clock to open bar settings. Hover over elements to see actions. 
 | `Super + Tab`           | Lock screen               |
 | `Super + N`             | Notifications             |
 | `Super + R`             | Toggle screen recorder    |
-| `Delete`                | Screenshot fullscreen     |
-| `SHIFT + Delete`        | Screenshot area select    |
+| `Print`                 | Screenshot fullscreen     |
+| `SHIFT + Print`         | Screenshot area select    |
 
 > [!note]
 >
@@ -78,6 +83,8 @@ Right-click the clock to open bar settings. Hover over elements to see actions. 
 
 ---
 ## Installation 
+
+> **On Fedora?** Use [fedora/README.md](fedora/README.md) instead. The steps below are upstream's, for Arch-based distros.
 
 **READ ALL**
 
