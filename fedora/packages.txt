@@ -137,6 +137,12 @@ pciutils                         # lspci, used by the System settings page
 upower
 
 # --------------------------------------------------
+# Remote / VMs
+# --------------------------------------------------
+
+virt-viewer                      # remote-viewer: opens Proxmox SPICE (.vv) consoles
+
+# --------------------------------------------------
 # Notifications / Visualizers
 # --------------------------------------------------
 
@@ -158,6 +164,7 @@ fontawesome-6-free-fonts|fontawesome-fonts-all|fontawesome4-fonts
 # --------------------------------------------------
 
 python3
+perl-File-MimeInfo              # `mimetype`: lets xdg-open detect files by extension outside GNOME (.vv opened in calibre without it)
 jq
 flatpak
 curl

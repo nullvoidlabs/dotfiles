@@ -1,0 +1,3 @@
+{
+  "diagnostics.globals": ["hl", "mainMod", "terminal", "menu", "fileManager", "browser", "MONITOR1", "MONITOR2", "PRIMARY_MONITOR"]
+}

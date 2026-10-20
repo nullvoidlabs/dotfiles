@@ -85,6 +85,10 @@ fi
 [[ "$SKIPPED_REAL_FILES" -gt 0 ]] && warning "$SKIPPED_REAL_FILES file(s) skipped; see warnings above."
 
 install_session_units "$DRY_RUN"
+if [[ "$DRY_RUN" -eq 0 ]]; then
+    fix_gtk_cursor_size
+    set_default_apps
+fi
 
 if [[ "$DRY_RUN" -eq 1 ]]; then
     info "Dry run: nothing was written."

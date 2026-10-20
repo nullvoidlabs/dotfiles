@@ -360,6 +360,55 @@ install_session_units() {
     fi
 }
 
+# The GTK settings.ini files are copied once (theme.py edits them), so a repo
+# change doesn't reach existing installs. Upstream used 14: Hyprland snaps
+# that to the theme's nearest real size (24), but GNOME draws vector cursors
+# at the exact size, so GTK apps under GNOME got a tiny cursor. 24 looks
+# identical in Hyprland and normal in GNOME. Only 14 is replaced, so a size
+# you picked yourself is left alone.
+fix_gtk_cursor_size() {
+    local f
+    for f in "$CONFIG_DIR/gtk-3.0/settings.ini" "$CONFIG_DIR/gtk-4.0/settings.ini"; do
+        [[ -f "$f" && ! -L "$f" ]] || continue
+        if grep -q '^gtk-cursor-theme-size=14$' "$f"; then
+            sed -i 's/^gtk-cursor-theme-size=14$/gtk-cursor-theme-size=24/' "$f"
+            info "GTK cursor size 14 -> 24 in ${f#"$HOME"/}"
+        fi
+    done
+}
+
+# Default handlers that GNOME sets for you but a bare Hyprland session doesn't.
+# Each one is only set when nothing (or calibre) currently owns it, so your
+# own choices win. Writes ~/.config/mimeapps.list, shared with GNOME.
+set_default_apps() {
+    command -v xdg-mime >/dev/null 2>&1 || return 0
+    local dirs=(/usr/share/applications /var/lib/flatpak/exports/share/applications "$HOME/.local/share/applications")
+    find_desktop() {   # first .desktop whose Exec= starts with the given command
+        grep -RlE --include="*.desktop" "^Exec=($1)( |$)" "${dirs[@]}" 2>/dev/null | head -n1 | xargs -r basename
+    }
+    claim() {          # claim <mime> <desktop-file>
+        local cur
+        [[ -n "$2" ]] || return 0
+        cur="$(xdg-mime query default "$1" 2>/dev/null)"
+        if [[ -z "$cur" || "$cur" == *calibre* ]]; then
+            xdg-mime default "$2" "$1" && info "Default for $1: $2"
+        fi
+    }
+    claim application/x-virt-viewer "$(find_desktop 'remote-viewer')"
+    claim text/plain "$(find_desktop 'xed')"
+
+    # Browser: Brave if it's installed and nothing else was chosen beyond Fedora's Firefox default
+    local brave cur
+    brave="$(find_desktop 'brave-browser(-stable)?|/usr/bin/brave-browser(-stable)?|/usr/bin/flatpak run .*com\.brave\.Browser')"
+    if [[ -n "$brave" ]] && command -v xdg-settings >/dev/null 2>&1; then
+        cur="$(xdg-settings get default-web-browser 2>/dev/null)"
+        if [[ -z "$cur" || "$cur" == *firefox* ]]; then
+            xdg-settings set default-web-browser "$brave" && info "Default browser: $brave"
+        fi
+    fi
+    unset -f find_desktop claim
+}
+
 run_theme() {
     if command -v python3 >/dev/null 2>&1; then
         python3 "$CONFIG_DIR/43pr/bin/theme.py" "$@"

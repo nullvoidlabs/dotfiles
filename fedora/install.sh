@@ -6,6 +6,7 @@
 #
 #   --yes            don't ask before enabling COPRs / Flathub
 #   --with-hyprmod   also install HyprMod (GUI keybind/settings editor) via pipx
+#   --with-brave     add Brave's official RPM repo and install brave-browser
 #   --skip-packages  only (re)link configs and regenerate the theme
 #
 # What it does (same end state as upstream install.sh on Arch):
@@ -23,11 +24,13 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
 
 ASSUME_YES=0
 WITH_HYPRMOD=0
+WITH_BRAVE=0
 SKIP_PACKAGES=0
 for arg in "$@"; do
     case "$arg" in
         --yes|-y)        ASSUME_YES=1 ;;
         --with-hyprmod)  WITH_HYPRMOD=1 ;;
+        --with-brave)    WITH_BRAVE=1 ;;
         --skip-packages) SKIP_PACKAGES=1 ;;
         -h|--help)       sed -n '2,20p' "$0"; exit 0 ;;
         *) error "Unknown option: $arg"; exit 1 ;;
@@ -198,6 +201,18 @@ EOF
         fi
     fi
 
+    # Brave (Super + B prefers it; falls back to Firefox). Official repo, opt-in.
+    if [[ "$WITH_BRAVE" -eq 1 ]] && ! command -v brave-browser >/dev/null 2>&1; then
+        info "Adding Brave's RPM repo and installing brave-browser..."
+        if sudo dnf config-manager addrepo --overwrite \
+                --from-repofile=https://brave-browser-rpm-release.s3.brave.com/brave-browser.repo \
+            && install_packages brave-browser; then
+            success "Brave installed."
+        else
+            warning "Brave install failed; Super + B will open Firefox."
+        fi
+    fi
+
     # ----------------------------------------------
     # Power profiles
     # ----------------------------------------------
@@ -269,6 +284,8 @@ for wp in "$REPO_DIR"/wallhaven-*.jpg; do
 done
 
 install_session_units
+fix_gtk_cursor_size
+set_default_apps
 
 if command -v systemctl >/dev/null 2>&1; then
     systemctl --user enable --now pipewire.service pipewire-pulse.service wireplumber.service >/dev/null 2>&1 || true

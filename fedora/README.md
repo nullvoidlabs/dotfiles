@@ -16,7 +16,7 @@ cd ~/dotfiles
 
 Then log out, pick **Hyprland** from the gear icon on the GDM login screen, and log in.
 
-Flags: `--yes` (no prompts), `--with-hyprmod` (also install HyprMod via pipx), `--skip-packages` (relink + theme only).
+Flags: `--yes` (no prompts), `--with-brave` (add Brave's official repo and install it), `--with-hyprmod` (also install HyprMod via pipx), `--skip-packages` (relink + theme only).
 
 ## Updating
 
@@ -54,13 +54,32 @@ git push --force-with-lease origin fedora
 
 Config edits (all still work on Arch, so the patch stays rebase-friendly):
 
-- `hypr/hyprland.lua`: polkit agent was `/usr/lib/polkit-kde-authentication-agent-1` (not even in upstream's package list); now `hyprpolkitagent` with Fedora and Arch paths. Browser `brave` → `firefox`.
+- `hypr/hyprland.lua`:
+  - Polkit agent was `/usr/lib/polkit-kde-authentication-agent-1` (not in upstream's package list); now `hyprpolkitagent` with Fedora and Arch paths.
+  - Browser: `brave-browser`, falling back to the Brave Flatpak, then Firefox (upstream's `brave` command doesn't exist on Fedora).
+  - Touchpad `natural_scroll = true`: content follows your fingers.
+- `hypr/.luarc.json`: tells Lua language servers that `hl` and the shared config globals exist, so editors stop flagging every line.
+- `gtk-3.0/gtk-4.0 settings.ini`: cursor size 14 → 24. See "Cursor size" below.
 - `hypr/keybinds.lua`: Super+R calls `scripts/gsr-toggle.sh` (native or Flatpak recorder, same pidfile for the OSD).
 - `.zshrc`: plugin paths checked for both `/usr/share/zsh/plugins/<name>` (Arch) and `/usr/share/<name>` (Fedora).
 - `quickshell/SettingsPages/StoragePage.qml`: YAY/PACMAN cache rows → one DNF CACHE row (`pkexec dnf clean all`).
 - `quickshell/SettingsPages/UpdatesPage.qml`: counts and installs system updates with dnf (`repoquery --upgrades`, `dnf upgrade --refresh`); "Update desktop" runs `fedora/update.sh`. AUR row shows N/A.
 - `quickshell/hyprquickpaper/cache.sh`: prefers `magick` over the deprecated `convert`.
 - `hypr/hyprland.lua` autostart: imports the session environment into systemd/D-Bus and starts `hyprland-session.target` (installed from `fedora/systemd/` into `~/.config/systemd/user/`). Without it, `xdg-desktop-portal` fails with result `dependency` because `graphical-session.target` is never active under a bare Hyprland session. Apps then fall back to built-in file pickers (Enter doesn't save in Brave's) and screen sharing breaks.
+
+## Desktop integration a bare Hyprland session doesn't do for you
+
+The installer and `update.sh` handle these; each only acts when you haven't already chosen something.
+
+- **File type detection.** Outside GNOME/KDE, `xdg-open` falls back to `file --mime-type`, which sniffs contents. Text-based formats like Proxmox SPICE `.vv` files then look like `text/plain` and open in whatever claims plain text (calibre). `perl-File-MimeInfo` provides `mimetype`, which matches by extension, and `xdg-open` prefers it.
+- **Default apps** (`~/.config/mimeapps.list`, shared with GNOME): `.vv` → remote-viewer, `text/plain` → xed (only if unset or calibre), default browser → Brave (only if unset or Firefox).
+- **Portals.** `hyprland-session.target` (see above) so file pickers and screen sharing work.
+
+## Cursor size
+
+Hyprland keeps `XCURSOR_SIZE=14` (upstream's value). Cursor themes ship fixed sizes (Adwaita: 24, 32, 48…), and Hyprland snaps 14 to the nearest real one, so it looks like 24. GNOME draws vector cursors at the exact requested size, so the same 14 in the shared GTK settings made the cursor tiny when switching back to GNOME. The GTK files now say 24, which looks identical in Hyprland and normal in GNOME. Existing installs with exactly 14 are migrated; any other value is left alone.
+
+If GNOME's cursor is still small, nwg-look or a GNOME setting changed it globally: `gsettings reset org.gnome.desktop.interface cursor-size`.
 
 ## Known gaps
 
@@ -69,3 +88,6 @@ Config edits (all still work on Arch, so the patch stays rebase-friendly):
 - **Super + L** is bound twice upstream (light/dark toggle and focus-right). Both fire. Rebind one in `hypr/keybinds.lua` if it bothers you.
 - **First recording** with the Flatpak recorder asks for your password once (its KMS capture helper needs root).
 - After `papirus-icon-theme` updates, re-run `papirus-folders -C white`.
+- **COPR in-between states**: `dnf upgrade` may print "Skipping packages with conflicts: hyprtoolkit" / "broken dependencies: hyprland-guiutils" right after the maintainer bumps a library but before rebuilding everything that uses it. dnf keeps your installed pair consistent; just upgrade again in a few days. Don't use `--allowerasing`: `hyprland` requires `hyprland-guiutils`.
+- **Shared with GNOME**: GTK settings, `mimeapps.list` and `org.gnome.desktop.interface` are the same files/keys in both sessions. The light/dark toggle (Super + L) also flips GNOME's color scheme.
+- **Opacity**: Super + O sets every window's opacity (upstream default is now 70%).

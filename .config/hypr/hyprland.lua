@@ -7,7 +7,8 @@ mainMod    = "SUPER"
 terminal   = "kitty"
 menu       = "rofi -show drun"
 fileManager = "thunar"
-browser    = "firefox" -- Fedora default; upstream uses "brave"
+-- Brave from its RPM repo, else Brave Flatpak, else Fedora's default Firefox
+browser    = "brave-browser || flatpak run com.brave.Browser || firefox"
 
 ---- AUTOSTART ----
 
@@ -42,7 +43,7 @@ hl.config({
         follow_mouse = 1,
         sensitivity = 0.5,
         touchpad = {
-            natural_scroll = false,
+            natural_scroll = true, -- content follows fingers (two-finger pull down scrolls up)
             tap_to_click = true,
         },
     },
