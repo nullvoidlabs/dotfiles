@@ -221,8 +221,10 @@ PanelWindow {
                     width: parent.width
                     height: parent.height
                     source: img.source
-                    sourceSize.width: img.sourceSize.width
-                    sourceSize.height: img.sourceSize.height
+                    // Blurred black silhouette: decode and render it small. Full-size
+                    // per-tile blur re-rendered every frame while scrolling = lag.
+                    sourceSize.width: Math.max(1, img.sourceSize.width / 4)
+                    sourceSize.height: Math.max(1, img.sourceSize.height / 4)
                     fillMode: Image.PreserveAspectCrop
                     asynchronous: true
                     cache: false
@@ -230,7 +232,8 @@ PanelWindow {
                     visible: main.shadowEnabled
                     opacity: main.shadowOpacity
                     layer.enabled: true
-                    layer.effect: MultiEffect { brightness: -1; blurEnabled: true; blur: main.shadowBlur }
+                    layer.textureSize: Qt.size(Math.max(1, Math.round(width / 4)), Math.max(1, Math.round(height / 4)))
+                    layer.effect: MultiEffect { brightness: -1; blurEnabled: true; blur: main.shadowBlur; blurMax: 16 }
                     transform: Shear { xFactor: main.skewFactor }
                 }
 
@@ -256,15 +259,22 @@ PanelWindow {
                     sourceSize.height: delegateItem.height
                     transform: Shear { xFactor: main.skewFactor }
 
+                    // Thumbnail not made yet: retry with backoff (1s, 2s, 3s... max 5s),
+                    // give up after ~1 min instead of reloading every tile every second.
+                    property int retries: 0
                     Timer {
                         id: retryTimer
-                        interval: 1000
+                        interval: Math.min(5000, 1000 * (img.retries + 1))
                         repeat: false
-                        onTriggered: { const s = img.source; img.source = ""; img.source = s }
+                        onTriggered: { img.retries++; const s = img.source; img.source = ""; img.source = s }
                     }
 
                     onStatusChanged: {
-                        if (status === Image.Error) { alt.text = "Caching"; retryTimer.start() }
+                        if (status === Image.Ready) { alt.text = "" }
+                        else if (status === Image.Error) {
+                            if (img.retries < 15) { alt.text = "Caching"; retryTimer.start() }
+                            else alt.text = "No thumbnail"
+                        }
                     }
                 }
 
@@ -289,7 +299,16 @@ PanelWindow {
         }
 
         Keys.onPressed: function(event) {
-            if (event.key === Qt.Key_Space) {
+            const fast = (event.modifiers & Qt.ShiftModifier) ? 3 : 1
+            if (event.key === Qt.Key_Right || event.key === Qt.Key_L || event.key === Qt.Key_D) {
+                userMoved = true; moveSelection(fast, 1)
+            } else if (event.key === Qt.Key_Left || event.key === Qt.Key_H || event.key === Qt.Key_A) {
+                userMoved = true; moveSelection(-fast, 1)
+            } else if (event.key === Qt.Key_Home) {
+                userMoved = true; moveSelection(-count, 3)
+            } else if (event.key === Qt.Key_End) {
+                userMoved = true; moveSelection(count, 3)
+            } else if (event.key === Qt.Key_Space || event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
                 activateCurrent()
             } else if (event.key === Qt.Key_W || event.key === Qt.Key_Escape) {
                 Qt.quit()

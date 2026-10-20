@@ -67,7 +67,9 @@ Config edits (all still work on Arch, so the patch stays rebase-friendly):
 - `.zshrc`: plugin paths checked for both `/usr/share/zsh/plugins/<name>` (Arch) and `/usr/share/<name>` (Fedora).
 - `quickshell/SettingsPages/StoragePage.qml`: YAY/PACMAN cache rows → one DNF CACHE row (`pkexec dnf clean all`).
 - `quickshell/SettingsPages/UpdatesPage.qml`: counts and installs system updates with dnf (`repoquery --upgrades`, `dnf upgrade --refresh`); "Update desktop" runs `fedora/update.sh`. AUR row shows N/A.
-- `quickshell/hyprquickpaper/cache.sh`: prefers `magick` over the deprecated `convert`.
+- Wallpaper picker (Super + W):
+  - `cache.sh`: one run at a time (reopening the picker started a second run that wrote half-finished thumbnails), atomic writes, parallel jobs capped at CPU count with one thread each, `.webp` thumbnails, stale thumbnails removed, prefers `magick` over `convert`.
+  - `shell.qml`: tile shadows rendered at quarter resolution (full-size blur on every tile, every frame, was the main scroll lag); thumbnail retries back off and stop after ~1 min; keyboard works: ←/→ (or H/L, A/D, Shift for 3), Home/End, Enter/Space to apply. Before, arrows moved a different internal index than the highlight, so Space could apply the wrong wallpaper.
 - `hypr/hyprland.lua` autostart: imports the session environment into systemd/D-Bus and starts `hyprland-session.target` (installed from `fedora/systemd/` into `~/.config/systemd/user/`). Without it, `xdg-desktop-portal` fails with result `dependency` because `graphical-session.target` is never active under a bare Hyprland session. Apps then fall back to built-in file pickers (Enter doesn't save in Brave's) and screen sharing breaks.
 
 ## Desktop integration a bare Hyprland session doesn't do for you
