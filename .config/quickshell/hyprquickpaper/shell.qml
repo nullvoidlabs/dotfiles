@@ -17,7 +17,7 @@ PanelWindow {
     property real skewFactor: 0
     property real baseSpacing: 0
     property real edgeSpacing: 80
-    property int startPosition: 4
+    property int startPosition: -1   // -1 = open on the current wallpaper (else the middle one)
     property bool shadowEnabled: true
     property color shadowColor: "#000000"
     property real shadowOpacity: 0.4
@@ -26,6 +26,9 @@ PanelWindow {
     property real shadowY: 6
     property string wallpaperPath: configs.wallpaper_path.replace("$HOME", Quickshell.env("HOME"))
     property string cachePath: configs.cache_path.replace("$HOME", Quickshell.env("HOME"))
+
+    readonly property color highlightColor:
+        (configs.border_color && configs.border_color !== "transparent") ? configs.border_color : "#e6ffffff"
 
     property bool showEmpty: false
     readonly property bool looksEmpty: wallpaperPath !== ""
@@ -63,6 +66,16 @@ PanelWindow {
             property string cache_path
             property int number_of_pictures
             property string border_color
+        }
+    }
+
+    // Current wallpaper (written by theme.py), so the picker opens centered on it
+    property string currentWallpaper: ""
+    FileView {
+        path: (Quickshell.env("XDG_STATE_HOME") || (Quickshell.env("HOME") + "/.local/state")) + "/43pr/state.json"
+        onLoaded: {
+            try { main.currentWallpaper = JSON.parse(text()).wallpaper || "" } catch (e) {}
+            list.centerOnStart()
         }
     }
 
@@ -133,6 +146,7 @@ PanelWindow {
         orientation: ListView.Horizontal
         spacing: 0
         clip: true
+        interactive: false   // position only changes through the selection (keys, wheel, click)
         cacheBuffer: 400 * main.ui
         boundsBehavior: Flickable.StopAtBounds
 
@@ -153,13 +167,44 @@ PanelWindow {
         rightMargin: sideMargin
 
         function clampIndex(i) { return Math.max(0, Math.min(i, count - 1)) }
-        function ensureVisibleAnimated(i) { contentX = i * step }
+        // contentX that puts tile i in the middle of the screen. With leftMargin
+        // = sideMargin, tile 0 is centered at contentX = -sideMargin (the left
+        // bound). Upstream used i * step, which put the selected tile at the
+        // left edge and made the first tiles unreachable.
+        function centerX(i) { return originX + i * step - sideMargin }
+        function ensureVisibleAnimated(i) { contentX = centerX(i) }
+
+        function startIndex() {
+            if (main.startPosition >= 0) return clampIndex(main.startPosition)
+            if (main.currentWallpaper !== "") {
+                // match by file name: state.json holds a resolved path, which
+                // differs from the model's if ~/Pictures is a symlink
+                const name = main.currentWallpaper.split("/").pop()
+                for (let i = 0; i < folderModel.count; i++)
+                    if (folderModel.get(i, "fileName") === name) return i
+            }
+            return Math.floor((count - 1) / 2)
+        }
 
         function centerOnStart() {
             if (userMoved || count <= 0 || configs.number_of_pictures <= 0) return
-            selectedIndex = clampIndex(main.startPosition)
-            contentX = selectedIndex * step
-            ready = true
+            selectedIndex = startIndex()
+            ready = false              // jump there, don't animate the opening
+            contentX = centerX(selectedIndex)
+            readyTimer.restart()
+        }
+        Timer { id: readyTimer; interval: 50; onTriggered: list.ready = true }
+
+        // Touchpads send many small wheel events; step one tile per notch-worth
+        property real wheelAcc: 0
+        function wheelStep(delta) {
+            wheelAcc += delta
+            if (Math.abs(wheelAcc) >= 120) {
+                const n = wheelAcc > 0 ? -1 : 1
+                wheelAcc = 0
+                userMoved = true
+                moveSelection(n, 1)
+            }
         }
 
         function activateCurrent() {
@@ -182,9 +227,11 @@ PanelWindow {
             function onNumber_of_picturesChanged() { list.centerOnStart() }
         }
 
+        // Fixed-duration move per step: every press feels the same. The old
+        // velocity-based animation plus hover-to-select made jumps uneven.
         Behavior on contentX {
             enabled: list.ready
-            SmoothedAnimation { id: anim; property real velocity: main.speed; duration: main.animDuration }
+            NumberAnimation { id: anim; property real velocity: 0; duration: 220; easing.type: Easing.OutCubic }
         }
 
         delegate: Item {
@@ -240,7 +287,7 @@ PanelWindow {
                 Text {
                     id: alt
                     text: ""
-                    color: configs.border_color
+                    color: main.highlightColor
                     anchors.centerIn: parent
                     font.pixelSize: 16 * main.ui
                     transform: Shear { xFactor: main.skewFactor }
@@ -249,7 +296,8 @@ PanelWindow {
                 Image {
                     id: img
                     anchors.fill: parent
-                    opacity: 0.95
+                    opacity: delegateItem.active ? 1 : 0.55
+                    Behavior on opacity { NumberAnimation { duration: 150 } }
                     fillMode: Image.PreserveAspectCrop
                     asynchronous: true
                     cache: false
@@ -281,20 +329,48 @@ PanelWindow {
                 Rectangle {
                     z: 10
                     anchors.fill: parent
-                    visible: delegateItem.active
+                    anchors.margins: -Math.round(4 * main.ui)
+                    opacity: delegateItem.active ? 1 : 0
+                    visible: opacity > 0
+                    Behavior on opacity { NumberAnimation { duration: 150 } }
                     color: "transparent"
-                    border.width: Math.max(1, Math.round(2 * main.ui))
-                    border.color: configs.border_color
+                    border.width: Math.max(2, Math.round(2 * main.ui))
+                    border.color: main.highlightColor
                     transform: Shear { xFactor: main.skewFactor }
+                }
+
+                // file name under the selected tile
+                Text {
+                    anchors.top: parent.bottom
+                    anchors.topMargin: Math.round(12 * main.ui)
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: Math.max(parent.width, 220 * main.ui)
+                    horizontalAlignment: Text.AlignHCenter
+                    elide: Text.ElideMiddle
+                    text: fileName
+                    color: main.highlightColor
+                    font.pixelSize: Math.round(12 * main.ui)
+                    opacity: delegateItem.active ? 0.9 : 0
+                    Behavior on opacity { NumberAnimation { duration: 150 } }
                 }
             }
 
+            // Click a tile to select it, click the selected one to apply.
+            // No hover-select: tiles sliding under the cursor kept changing the
+            // selection mid-move, so the next arrow press jumped from there.
             MouseArea {
                 anchors.fill: parent
-                hoverEnabled: list.ready
-                onEntered: { list.userMoved = true; list.selectedIndex = index }
-                onClicked: list.activateCurrent()
-                onWheel: function(wheel) { list.flick(-wheel.angleDelta.y * 8, 0); wheel.accepted = true }
+                cursorShape: Qt.PointingHandCursor
+                onClicked: {
+                    list.userMoved = true
+                    if (index === list.selectedIndex) list.activateCurrent()
+                    else list.moveSelection(index - list.selectedIndex, 1)
+                }
+                onWheel: function(wheel) {
+                    const d = Math.abs(wheel.angleDelta.x) > Math.abs(wheel.angleDelta.y) ? -wheel.angleDelta.x : wheel.angleDelta.y
+                    list.wheelStep(d)
+                    wheel.accepted = true
+                }
             }
         }
 
