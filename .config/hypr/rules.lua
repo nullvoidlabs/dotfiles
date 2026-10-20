@@ -80,3 +80,15 @@ hl.window_rule({
     match = { title = "^(Save File)$" },
     float = true,
 })
+
+-- Image previews pop up instead of tiling: GNOME Loupe (Fedora's default),
+-- Eye of GNOME, Ristretto, gThumb, imv, feh, qimgv, GNOME Sushi previewer.
+-- Opaque so the picture isn't see-through at the global opacity.
+hl.window_rule({
+    name = "image-preview-popup",
+    match = { class = "^(org\\.gnome\\.Loupe|org\\.gnome\\.eog|eog|org\\.xfce\\.ristretto|ristretto|org\\.gnome\\.gThumb|gthumb|imv|feh|qimgv|org\\.gnome\\.NautilusPreviewer)$" },
+    float = true,
+    center = true,
+    size = "70% 75%",
+    opacity = "1.0 override",
+})

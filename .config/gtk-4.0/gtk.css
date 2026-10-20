@@ -22,3 +22,15 @@ treeview.view text {
 * {
     color: @gtk_fg;
 }
+
+/* Drag-select box. `.view` above gives every view an opaque background, and
+   Thunar's selection box is drawn as `.view.rubberband`, so it inherited that
+   and covered the files. Keep it a faint tint with a thin outline. */
+.view.rubberband,
+.view rubberband,
+.rubberband,
+rubberband {
+    background-color: alpha(@gtk_fg, 0.10);
+    background-image: none;
+    border: 1px solid alpha(@gtk_fg, 0.45);
+}
