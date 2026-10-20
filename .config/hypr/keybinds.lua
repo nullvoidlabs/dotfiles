@@ -6,7 +6,7 @@
 local home = os.getenv("HOME")
 local menu = "rofi -show drun"
 
-hl.bind(mainMod .. " + T", hl.dsp.exec_cmd(terminal)) 
+hl.bind(mainMod .. " + T", hl.dsp.exec_cmd(terminal))
 hl.bind(mainMod .. " + D", hl.dsp.exec_cmd("pgrep -x rofi >/dev/null && pkill -x rofi || " .. menu)) -- Toggle launcher
 hl.bind(mainMod .. " + S", hl.dsp.exec_cmd("qs ipc call wheel toggle")) -- Wheel launcher
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager))
@@ -31,7 +31,7 @@ hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("python3 " .. home .. "/.config/43pr/
 
 hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("qs ipc call notifications toggle")) -- Notifications
 
-hl.bind(mainMod .. " + C", hl.dsp.exec_cmd("qs ipc call todo toggle"))  -- To-do
+hl.bind(mainMod .. " + C", hl.dsp.exec_cmd("qs ipc call todo toggle")) -- To-do
 
 -- Mouse move/resize window
 hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(), { mouse = true })
@@ -40,10 +40,22 @@ hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
 hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd("qs ipc call bar toggle")) -- Toggle bar
 
 -- Clipboard
-hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("pgrep -x rofi >/dev/null && pkill -x rofi || cliphist list | rofi -dmenu -p '' | cliphist decode | wl-copy"))
+hl.bind(
+	mainMod .. " + V",
+	hl.dsp.exec_cmd(
+		"pgrep -x rofi >/dev/null && pkill -x rofi || cliphist list | rofi -dmenu -p '' | cliphist decode | wl-copy"
+	)
+)
 
 -- Screenshot fullscreen (Print Screen; upstream used Delete, which made Delete unusable)
-hl.bind("Print", hl.dsp.exec_cmd("sh -c 'file=" .. home .. "/Pictures/$(date +%s).png; grim \"$file\"; wl-copy < \"$file\"; qs ipc call screenshot notify \"$file\"'"))
+hl.bind(
+	"Print",
+	hl.dsp.exec_cmd(
+		"sh -c 'file="
+			.. home
+			.. '/Pictures/Screenshots/$(date +%s).png; grim "$file"; wl-copy < "$file"; qs ipc call screenshot notify "$file"\''
+	)
+)
 
 -- Screenshot area select (Shift + Print Screen)
 hl.bind("SHIFT + Print", hl.dsp.exec_cmd(home .. "/.config/hypr/scripts/screenshot-area.sh"))
@@ -53,27 +65,27 @@ hl.bind(mainMod .. " + X", hl.dsp.exec_cmd("hyprctl switchxkblayout current next
 
 -- Toggle float window, center and rezise
 hl.bind(mainMod .. " + Space", function()
-    hl.dispatch(hl.dsp.window.float({ action = "toggle" }))
+	hl.dispatch(hl.dsp.window.float({ action = "toggle" }))
 
-    local w = hl.get_active_window()
-    if w ~= nil and w.floating then
-        local mon = hl.get_active_monitor()
-        if mon ~= nil then
-            local target_w = math.floor(mon.width * 0.7) 
-            local target_h = math.floor(mon.height * 0.7)
+	local w = hl.get_active_window()
+	if w ~= nil and w.floating then
+		local mon = hl.get_active_monitor()
+		if mon ~= nil then
+			local target_w = math.floor(mon.width * 0.7)
+			local target_h = math.floor(mon.height * 0.7)
 
-            -- absolute resize (relative = false), not a delta
-            hl.dispatch(hl.dsp.window.resize({ x = target_w, y = target_h, relative = false }))
+			-- absolute resize (relative = false), not a delta
+			hl.dispatch(hl.dsp.window.resize({ x = target_w, y = target_h, relative = false }))
 
-            local mon_x = mon.x or 0
-            local mon_y = mon.y or 0
-            local target_x = mon_x + math.floor((mon.width - target_w) / 2)
-            local target_y = mon_y + math.floor((mon.height - target_h) / 2)
+			local mon_x = mon.x or 0
+			local mon_y = mon.y or 0
+			local target_x = mon_x + math.floor((mon.width - target_w) / 2)
+			local target_y = mon_y + math.floor((mon.height - target_h) / 2)
 
-            -- absolute move to the centered position
-            hl.dispatch(hl.dsp.window.move({ x = target_x, y = target_y, relative = false }))
-        end
-    end
+			-- absolute move to the centered position
+			hl.dispatch(hl.dsp.window.move({ x = target_x, y = target_y, relative = false }))
+		end
+	end
 end)
 
 -- Gpu screen recorder (native binary or Flatpak; see scripts/gsr-toggle.sh)
@@ -81,30 +93,34 @@ hl.bind(mainMod .. " + R", hl.dsp.exec_cmd(home .. "/.config/hypr/scripts/gsr-to
 
 -- Zoom
 local function zoomfunction(value)
-    local zoomvalue = hl.get_config("cursor:zoom_factor")
-    if (zoomvalue + value) > 1.5 then
-        hl.config({ cursor = { zoom_factor = 1.5 } })
-    elseif (zoomvalue + value) < 1.0 then
-        hl.config({ cursor = { zoom_factor = 1.0 } })
-    else
-        hl.config({ cursor = { zoom_factor = zoomvalue + value } })
-    end
+	local zoomvalue = hl.get_config("cursor:zoom_factor")
+	if (zoomvalue + value) > 1.5 then
+		hl.config({ cursor = { zoom_factor = 1.5 } })
+	elseif (zoomvalue + value) < 1.0 then
+		hl.config({ cursor = { zoom_factor = 1.0 } })
+	else
+		hl.config({ cursor = { zoom_factor = zoomvalue + value } })
+	end
 end
-hl.bind(mainMod .. " + mouse_down", function() zoomfunction(-0.5) end, { repeating = true })
-hl.bind(mainMod .. " + mouse_up", function() zoomfunction(0.5) end, { repeating = true })
+hl.bind(mainMod .. " + mouse_down", function()
+	zoomfunction(-0.5)
+end, { repeating = true })
+hl.bind(mainMod .. " + mouse_up", function()
+	zoomfunction(0.5)
+end, { repeating = true })
 
 --# Zoom with keypad
-hl.bind(mainMod .. " + code:82", function() zoomfunction(-0.3) end, { repeating = true })
-hl.bind(mainMod .. " + code:86", function() zoomfunction(0.3) end, { repeating = true })
+hl.bind(mainMod .. " + code:82", function()
+	zoomfunction(-0.3)
+end, { repeating = true })
+hl.bind(mainMod .. " + code:86", function()
+	zoomfunction(0.3)
+end, { repeating = true })
 
 -- Brightness keys
-hl.bind("XF86MonBrightnessUp",
-    hl.dsp.exec_cmd("brightnessctl set 2%+"),
-    { locked = true, repeating = true })
+hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd("brightnessctl set 2%+"), { locked = true, repeating = true })
 
-hl.bind("XF86MonBrightnessDown",
-    hl.dsp.exec_cmd("brightnessctl set 2%-"),
-    { locked = true, repeating = true })
+hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl set 2%-"), { locked = true, repeating = true })
 
 -- VERIFY: exit dispatcher. Docs explicitly say to double check the exit
 -- dispatcher call when moving to Lua.
@@ -135,14 +151,22 @@ hl.bind(mainMod .. " + CTRL + J", hl.dsp.window.resize({ x = 0, y = 40 }), { rep
 -- Workspaces 1-10, and move-to-workspace with SHIFT (confirmed pattern from
 -- the official example config)
 for i = 1, 10 do
-    local key = i % 10 -- 10 maps to key 0
-    hl.bind(mainMod .. " + " .. key, hl.dsp.focus({ workspace = i }))
-    hl.bind(mainMod .. " + SHIFT + " .. key, hl.dsp.window.move({ workspace = i }))
+	local key = i % 10 -- 10 maps to key 0
+	hl.bind(mainMod .. " + " .. key, hl.dsp.focus({ workspace = i }))
+	hl.bind(mainMod .. " + SHIFT + " .. key, hl.dsp.window.move({ workspace = i }))
 end
 
 -- Media keys (confirmed pattern from the official example config)
-hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+"), { locked = true, repeating = true })
-hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"), { locked = true, repeating = true })
+hl.bind(
+	"XF86AudioRaiseVolume",
+	hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+"),
+	{ locked = true, repeating = true }
+)
+hl.bind(
+	"XF86AudioLowerVolume",
+	hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"),
+	{ locked = true, repeating = true }
+)
 hl.bind("XF86AudioMute", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"), { locked = true })
 
 hl.bind("XF86AudioPlay", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
