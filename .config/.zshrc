@@ -107,3 +107,17 @@ ZSH_HIGHLIGHT_STYLES[unknown-token]='fg=245'
 # --------------------------------------------------
 
 theme() { python3 "$HOME/.config/43pr/bin/theme.py" "$@"; }
+
+# --------------------------------------------------
+# SSH from kitty
+# --------------------------------------------------
+# kitty sets TERM=xterm-kitty, which most remote hosts have no terminfo
+# for: `clear` fails ("unknown terminal type") and Ctrl+L just prints a new
+# prompt. Plain `ssh` advertises xterm-256color instead: works everywhere
+# and leaves nothing on the remote host (matters on engagement targets).
+# `kssh` = kitten ssh: full kitty features, but it copies kitty's terminfo
+# and shell integration onto the remote host. Use it only on your own boxes.
+if [[ "$TERM" == "xterm-kitty" ]]; then
+    ssh() { TERM=xterm-256color command ssh "$@" }
+    alias kssh='kitten ssh'
+fi

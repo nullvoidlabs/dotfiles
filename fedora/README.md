@@ -138,6 +138,7 @@ Everything else matches [upstream's keybind table](../README.md#keybinds).
 - **Opacity (Super + O)** saves to `~/.local/state/43pr/opacity` instead of rewriting `hypr/rules.lua`, so changing it doesn't leave the repo modified. The default stays 70%.
 - **Thunar drag-select box** is a faint tint with an outline. Upstream's GTK CSS gave every `.view` an opaque background, and the selection box inherited it, hiding the files underneath.
 - **Image previews** (Loupe, Eye of GNOME, Ristretto, gThumb, imv, feh, qimgv) open as a centered, opaque pop-up instead of a tile.
+- **SSH from kitty**: `ssh` sends `TERM=xterm-256color`, because most remote hosts lack kitty's terminfo (`clear` failed with "unknown terminal type", Ctrl+L didn't clear). `kssh` runs `kitten ssh` for full kitty features, but it copies files onto the remote host, so use it only on your own machines.
 - **Prompt**: git status shown in `[ ]` again. Fixed starship's `stashed = "$"`, which warned on every prompt.
 - **Editors**: `hypr/.luarc.json` declares `hl` and the shared config globals, so Lua language servers stop flagging every line.
 
