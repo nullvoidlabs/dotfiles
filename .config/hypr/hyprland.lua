@@ -45,6 +45,9 @@ hl.config({
         touchpad = {
             natural_scroll = true, -- content follows fingers (two-finger pull down scrolls up)
             tap_to_click = true,
+            -- press with 2 fingers = right click, 3 = middle (libinput "clickfinger").
+            -- Default is "button areas": only pressing the bottom-right corner right-clicks.
+            clickfinger_behavior = true,
         },
     },
 })
