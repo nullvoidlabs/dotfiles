@@ -67,7 +67,11 @@ Item {
     }
 
     // ---- Individual update scripts ----
-    readonly property string pacmanScript: "sudo pacman -Syu"
+    // System packages: dnf on Fedora, pacman on Arch (the "pacman" names are kept
+    // so the rest of the page is unchanged)
+    property bool hasDnf: false
+    readonly property string pkgName: hasDnf ? "DNF" : "PACMAN"
+    readonly property string pacmanScript: hasDnf ? "sudo dnf upgrade --refresh" : "sudo pacman -Syu"
     readonly property string flatpakScript: "flatpak update -y"
 
     function aurScript() {
@@ -85,8 +89,10 @@ Item {
     // Resolve the dotfiles repo by following the theme.py symlink back to the repo.
     readonly property string repoResolve:
         "REPO=\"$(dirname \"$(dirname \"$(dirname \"$(dirname \"$(readlink -f \"$HOME/.config/43pr/bin/theme.py\")\")\")\")\")\"; "
-        + "if [ ! -f \"$REPO/update.sh\" ]; then echo \"update.sh not found (resolved repo: $REPO)\"; exit 1; fi; "
         + "cd \"$REPO\" || exit 1; "
+        // Fedora port: use fedora/update.sh when present
+        + "UPD=./update.sh; if command -v dnf >/dev/null 2>&1 && [ -f fedora/update.sh ]; then UPD=./fedora/update.sh; fi; "
+        + "if [ ! -f \"$UPD\" ]; then echo \"$UPD not found (resolved repo: $REPO)\"; exit 1; fi; "
 
     function desktopScript() {
         let s = repoResolve
@@ -96,7 +102,7 @@ Item {
         if (optSkipPackages)  args.push("--skip-packages")
         if (optSkipTheme)     args.push("--skip-theme")
         if (optRestartShell)  args.push("--restart-shell")
-        s += "./update.sh" + (args.length ? " " + args.join(" ") : "")
+        s += "\"$UPD\"" + (args.length ? " " + args.join(" ") : "")
         return s
     }
 
@@ -126,10 +132,13 @@ Item {
 
     Process {
         id: pacmanCheck
-        command: ["sh", "-c", "if command -v checkupdates >/dev/null 2>&1; then checkupdates 2>/dev/null | wc -l; else echo -1; fi"]
+        // dnf: read-only count from cached metadata (no sudo, no refresh)
+        command: ["sh", "-c", "if command -v dnf >/dev/null 2>&1; then echo dnf; dnf -q repoquery --upgrades --qf '%{name}\\n' 2>/dev/null | sed '/^$/d' | sort -u | wc -l; elif command -v checkupdates >/dev/null 2>&1; then echo pacman; checkupdates 2>/dev/null | wc -l; else echo none; echo -1; fi"]
         stdout: StdioCollector {
             onStreamFinished: {
-                const n = parseInt(text.trim())
+                const lines = text.trim().split("\n")
+                page.hasDnf = lines[0] === "dnf"
+                const n = parseInt(lines[lines.length - 1])
                 page.pacmanCount = isNaN(n) ? -1 : n
             }
         }
@@ -417,9 +426,9 @@ Item {
                         width: parent.width; spacing: 10
 
                         UpdateRow {
-                            label: "PACMAN"; detail: "official repos"
+                            label: page.pkgName; detail: "official repos"
                             count: page.pacmanCount
-                            onRun: page.run("Pacman update", page.pacmanScript)
+                            onRun: page.run(page.pkgName + " update", page.pacmanScript)
                         }
 
                         UpdateRow {
@@ -445,7 +454,7 @@ Item {
 
                         SmallButton {
                             width: parent.width
-                            label: "UPDATE ALL (PACMAN + AUR + FLATPAK)"
+                            label: page.hasDnf ? "UPDATE ALL (DNF + FLATPAK)" : "UPDATE ALL (PACMAN + AUR + FLATPAK)"
                             buttonEnabled: !runner.running
                             onClicked: page.run("Full system update", page.allScript())
                         }

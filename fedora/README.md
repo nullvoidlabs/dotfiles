@@ -1,16 +1,16 @@
 # 43PR Desktop — Fedora port
 
-Fedora version of [43PR/dotfiles](https://github.com/43PR/dotfiles). Same configs, same symlink model; only the install path and a few distro-specific lines differ. Built against upstream commit `3aeafef` (2026-10-18).
+Fedora port of [43PR/dotfiles](https://github.com/43PR/dotfiles) by **43PR**. All design, configs and the Quickshell desktop are his work; this branch only adapts installation and a few distro-specific lines for Fedora. Maintained by [NullVoidLabs](https://nullvoidlabs.io). If you like the setup, support the original author ([YouTube](https://www.youtube.com/@43PR2), [Ko-fi](https://ko-fi.com/43pr)).
+
+Same configs, same symlink model. Last rebased onto upstream commit `7274604` (2026-10-19).
 
 **Requires Fedora 43, 44 or 45 (x86_64).** The config uses Hyprland's Lua format, which needs Hyprland 0.55+. Fedora retired its own hyprland package, so this comes from the `nikromen/hyprland` COPR (0.56.x; the maintainer patches it to build against Fedora's Lua 5.4 on F43/44).
 
 ## Install
 
 ```bash
-git clone https://github.com/43PR/dotfiles.git ~/dotfiles
+git clone -b fedora https://github.com/nullvoidlabs/dotfiles.git ~/dotfiles
 cd ~/dotfiles
-git checkout -b fedora
-git am /path/to/0001-Add-Fedora-port.patch
 ./fedora/install.sh
 ```
 
@@ -22,9 +22,19 @@ Flags: `--yes` (no prompts), `--with-hyprmod` (also install HyprMod via pipx), `
 
 ```bash
 cd ~/dotfiles
-git fetch origin
-git rebase origin/main        # replays the Fedora commit on top of upstream
+git pull                      # this fork's fedora branch
 ./fedora/update.sh            # --dry-run, --skip-packages, --skip-theme, --restart-shell
+```
+
+The Settings → Updates page runs the same thing ("Update desktop") and uses dnf for system packages.
+
+Maintainer flow for pulling in new upstream work:
+
+```bash
+git remote add upstream https://github.com/43PR/dotfiles.git   # once
+git fetch upstream
+git rebase upstream/main      # replays the Fedora commits on top
+git push --force-with-lease origin fedora
 ```
 
 `update.sh` warns when upstream's `packages.txt` gains a package that `fedora/packages.txt` doesn't map yet.
@@ -48,6 +58,7 @@ Config edits (all still work on Arch, so the patch stays rebase-friendly):
 - `hypr/keybinds.lua`: Super+R calls `scripts/gsr-toggle.sh` (native or Flatpak recorder, same pidfile for the OSD).
 - `.zshrc`: plugin paths checked for both `/usr/share/zsh/plugins/<name>` (Arch) and `/usr/share/<name>` (Fedora).
 - `quickshell/SettingsPages/StoragePage.qml`: YAY/PACMAN cache rows → one DNF CACHE row (`pkexec dnf clean all`).
+- `quickshell/SettingsPages/UpdatesPage.qml`: counts and installs system updates with dnf (`repoquery --upgrades`, `dnf upgrade --refresh`); "Update desktop" runs `fedora/update.sh`. AUR row shows N/A.
 - `quickshell/hyprquickpaper/cache.sh`: prefers `magick` over the deprecated `convert`.
 - `hypr/hyprland.lua` autostart: imports the session environment into systemd/D-Bus and starts `hyprland-session.target` (installed from `fedora/systemd/` into `~/.config/systemd/user/`). Without it, `xdg-desktop-portal` fails with result `dependency` because `graphical-session.target` is never active under a bare Hyprland session. Apps then fall back to built-in file pickers (Enter doesn't save in Brave's) and screen sharing breaks.
 
