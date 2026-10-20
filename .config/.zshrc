@@ -2,7 +2,15 @@
 # Live autocompletion (must be sourced FIRST, before compinit)
 # --------------------------------------------------
 
-source /usr/share/zsh/plugins/zsh-autocomplete/zsh-autocomplete.plugin.zsh
+# Arch package path, then a distro package elsewhere, then the per-user clone
+# that fedora/install.sh makes (~/.local/share/zsh/zsh-autocomplete)
+for _43pr_ac in \
+    /usr/share/zsh/plugins/zsh-autocomplete/zsh-autocomplete.plugin.zsh \
+    /usr/share/zsh-autocomplete/zsh-autocomplete.plugin.zsh \
+    "${XDG_DATA_HOME:-$HOME/.local/share}/zsh/zsh-autocomplete/zsh-autocomplete.plugin.zsh"; do
+    [[ -r "$_43pr_ac" ]] && { source "$_43pr_ac"; break; }
+done
+unset _43pr_ac
 
 # Start suggesting after 1 character, with a tiny delay so it feels smooth
 zstyle ':autocomplete:*' min-input 1

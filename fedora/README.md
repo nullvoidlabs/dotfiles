@@ -90,4 +90,5 @@ If GNOME's cursor is still small, nwg-look or a GNOME setting changed it globall
 - After `papirus-icon-theme` updates, re-run `papirus-folders -C white`.
 - **COPR in-between states**: `dnf upgrade` may print "Skipping packages with conflicts: hyprtoolkit" / "broken dependencies: hyprland-guiutils" right after the maintainer bumps a library but before rebuilding everything that uses it. dnf keeps your installed pair consistent; just upgrade again in a few days. Don't use `--allowerasing`: `hyprland` requires `hyprland-guiutils`.
 - **Shared with GNOME**: GTK settings, `mimeapps.list` and `org.gnome.desktop.interface` are the same files/keys in both sessions. The light/dark toggle (Super + L) also flips GNOME's color scheme.
+- **zsh-autocomplete**: upstream's `.zshrc` sources it but it isn't in upstream's package list, and Fedora doesn't package it. The installer clones it to `~/.local/share/zsh/zsh-autocomplete` at the newest release tag; `.zshrc` checks the Arch path, a distro path, then that clone. On first shell start it may clone a helper (`zasync`) into `~/.cache/zsh`.
 - **Opacity**: Super + O sets every window's opacity (upstream default is now 70%).

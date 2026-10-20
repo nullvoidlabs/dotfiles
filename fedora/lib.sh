@@ -409,6 +409,41 @@ set_default_apps() {
     unset -f find_desktop claim
 }
 
+# zsh-autocomplete: upstream's .zshrc sources it, but it's not in upstream's
+# package list and Fedora doesn't package it. Cloned per-user at the newest
+# release tag (not main) so the code that runs in every shell is a tagged
+# release. Re-running checks out a newer tag if one exists.
+install_zsh_autocomplete() {
+    local dest="${XDG_DATA_HOME:-$HOME/.local/share}/zsh/zsh-autocomplete"
+    local url="https://github.com/marlonrichert/zsh-autocomplete.git" tag
+    if [[ -r /usr/share/zsh/plugins/zsh-autocomplete/zsh-autocomplete.plugin.zsh \
+       || -r /usr/share/zsh-autocomplete/zsh-autocomplete.plugin.zsh ]]; then
+        return 0
+    fi
+    command -v git >/dev/null 2>&1 || { warning "git missing; can't fetch zsh-autocomplete."; return 1; }
+    tag="$(git ls-remote --tags --refs "$url" 2>/dev/null | sed 's|.*refs/tags/||' \
+        | grep -E '^v?[0-9]+(\.[0-9]+)*$' | sort -V | tail -n1)"
+    if [[ -d "$dest/.git" ]]; then
+        [[ -z "$tag" ]] && return 0
+        [[ "$(git -C "$dest" describe --tags --exact-match 2>/dev/null)" == "$tag" ]] && return 0
+        info "Updating zsh-autocomplete to $tag..."
+        git -C "$dest" fetch -q --depth 1 origin tag "$tag" && git -C "$dest" -c advice.detachedHead=false checkout -q "$tag" \
+            || warning "Could not update zsh-autocomplete."
+        return 0
+    fi
+    if [[ -e "$dest" ]]; then
+        info "zsh-autocomplete found at ${dest#"$HOME"/} (not a git clone); leaving it."
+        return 0
+    fi
+    info "Installing zsh-autocomplete${tag:+ $tag}..."
+    mkdir -p "$(dirname "$dest")"
+    if git -c advice.detachedHead=false clone -q --depth 1 ${tag:+--branch "$tag"} "$url" "$dest"; then
+        success "zsh-autocomplete installed to ${dest#"$HOME"/}."
+    else
+        warning "Could not clone zsh-autocomplete; the shell works without it."
+    fi
+}
+
 run_theme() {
     if command -v python3 >/dev/null 2>&1; then
         python3 "$CONFIG_DIR/43pr/bin/theme.py" "$@"

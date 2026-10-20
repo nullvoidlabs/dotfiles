@@ -38,7 +38,7 @@ diverged = "⇕"
 untracked = "?"
 modified = "!"
 staged = "+"
-stashed = "$"
+stashed = '\$'   # `$` starts a variable in starship format strings; escape it
 
 # Python projects
 [python]

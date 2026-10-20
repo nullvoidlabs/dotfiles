@@ -284,6 +284,7 @@ for wp in "$REPO_DIR"/wallhaven-*.jpg; do
 done
 
 install_session_units
+install_zsh_autocomplete
 fix_gtk_cursor_size
 set_default_apps
 

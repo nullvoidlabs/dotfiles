@@ -86,6 +86,7 @@ fi
 
 install_session_units "$DRY_RUN"
 if [[ "$DRY_RUN" -eq 0 ]]; then
+    install_zsh_autocomplete
     fix_gtk_cursor_size
     set_default_apps
 fi
