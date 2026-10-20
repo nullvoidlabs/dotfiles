@@ -99,11 +99,11 @@ hl.bind(mainMod .. " + code:86", function() zoomfunction(0.3) end, { repeating =
 
 -- Brightness keys
 hl.bind("XF86MonBrightnessUp",
-    hl.dsp.exec_cmd("brightnessctl set 5%+"),
+    hl.dsp.exec_cmd("brightnessctl set 2%+"),
     { locked = true, repeating = true })
 
 hl.bind("XF86MonBrightnessDown",
-    hl.dsp.exec_cmd("brightnessctl set 5%-"),
+    hl.dsp.exec_cmd("brightnessctl set 2%-"),
     { locked = true, repeating = true })
 
 -- VERIFY: exit dispatcher. Docs explicitly say to double check the exit

@@ -30,7 +30,7 @@ format = "[$symbol$branch]($style) "
 # Git status
 [git_status]
 style = "bright-black"
-format = '([$all_status$ahead_behind]($style) )'
+format = '([\[$all_status$ahead_behind\]]($style) )'   # escaped brackets show around the status
 conflicted = "✘"
 ahead = "⇡"
 behind = "⇣"

@@ -45,7 +45,7 @@ Scope {
     property bool nightOn: false
     property bool dndOn: false
     property real brightness: 0.6          // 0..1, synced from brightnessctl
-    property int brightnessStep: 5         // percent per scroll notch / keypress
+    property int brightnessStep: 2         // percent per scroll notch / keypress / click (matches Fn keys)
     readonly property bool btOn: Bluetooth.defaultAdapter ? Bluetooth.defaultAdapter.enabled : false
 
     readonly property int outerZone: ringRadius + ringThickness
@@ -195,7 +195,8 @@ Scope {
     function run(i) {
         if (i < 0 || i >= root.items.length) return
         var a = root.items[i]
-        if (a.adjust) return
+        // Brightness: click / Enter = brighter (right-click = dimmer, scroll = both)
+        if (a.adjust) { root.adjustBrightness(root.brightnessStep); return }
         if (a.toggle) {
             root.toggleItem(a.key)
         } else {
@@ -306,7 +307,12 @@ Scope {
                         if (root.selectedIsAdjust())
                             root.adjustBrightness(ev.angleDelta.y > 0 ? root.brightnessStep : -root.brightnessStep)
                     }
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton
                     onClicked: function (mouse) {
+                        if (mouse.button === Qt.RightButton) {
+                            if (root.selectedIsAdjust()) root.adjustBrightness(-root.brightnessStep)
+                            return
+                        }
                         var dx = mouse.x - width / 2
                         var dy = mouse.y - height / 2
                         var d = Math.sqrt(dx * dx + dy * dy)
