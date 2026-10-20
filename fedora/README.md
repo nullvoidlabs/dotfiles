@@ -58,6 +58,9 @@ Config edits (all still work on Arch, so the patch stays rebase-friendly):
   - Polkit agent was `/usr/lib/polkit-kde-authentication-agent-1` (not in upstream's package list); now `hyprpolkitagent` with Fedora and Arch paths.
   - Browser: `brave-browser`, falling back to the Brave Flatpak, then Firefox (upstream's `brave` command doesn't exist on Fedora).
   - Touchpad `natural_scroll = true`: content follows your fingers.
+- `hypr/keybinds.lua`: screenshots on **Print** (full) and **Shift + Print** (area) instead of Delete / Shift + Delete, so Delete works as Delete again. Fn brightness keys step 2% instead of 5%.
+- `quickshell/Wheel.qml` (Super + S): dims the screen behind it, adds a backdrop disc, fills the segments and strengthens the lines so it reads on busy windows. Brightness item: click/Enter brightens, right-click dims, scroll works both ways, 2% steps.
+- `hypr/rules.lua` + `scripts/opacity.sh`: Super + O saves to `~/.local/state/43pr/opacity` instead of editing `rules.lua`, so the repo stays clean (default 70%).
 - `hypr/.luarc.json`: tells Lua language servers that `hl` and the shared config globals exist, so editors stop flagging every line.
 - `gtk-3.0/gtk-4.0 settings.ini`: cursor size 14 → 24. See "Cursor size" below.
 - `hypr/keybinds.lua`: Super+R calls `scripts/gsr-toggle.sh` (native or Flatpak recorder, same pidfile for the OSD).

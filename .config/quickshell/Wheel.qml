@@ -321,6 +321,16 @@ Scope {
                     }
                 }
 
+                // Visibility: dim + soften whatever is behind the wheel so the thin
+                // line work stays readable on busy windows and light wallpapers.
+                Rectangle {
+                    anchors.fill: parent
+                    color: Theme.alpha(Theme._bgBase, 0.35)
+                    opacity: win.reveal ? 1 : 0
+                    visible: opacity > 0
+                    Behavior on opacity { NumberAnimation { duration: 90; easing.type: Easing.OutCubic } }
+                }
+
                 Item {
                     id: wheel
                     width: 2 * (root.ringRadius + root.ringThickness) + 24
@@ -335,15 +345,26 @@ Scope {
                     Behavior on scale { NumberAnimation { duration: 110; easing.type: Easing.OutCubic } }
                     Behavior on opacity { NumberAnimation { duration: 90; easing.type: Easing.OutCubic } }
 
+                    // backdrop disc behind the ring
+                    Rectangle {
+                        width: 2 * (root.ringRadius + root.ringThickness / 2 + 14)
+                        height: width
+                        radius: width / 2
+                        anchors.centerIn: parent
+                        color: Theme.alpha(Theme._bgBase, 0.72)
+                        border.width: 1
+                        border.color: Theme.alpha(Theme.text, 0.12)
+                    }
+
                     // center hub: name + on/off state (or brightness %)
                     Rectangle {
                         width: 2 * (root.deadZone + 14)
                         height: width
                         radius: width / 2
                         anchors.centerIn: parent
-                        color: "transparent"
-                        border.width: 1
-                        border.color: root.selected >= 0 ? Theme.accent : Theme.alpha(Theme.text, 0.5)
+                        color: Theme.alpha(Theme._bgBase, 0.85)
+                        border.width: 1.5
+                        border.color: root.selected >= 0 ? Theme.accent : Theme.alpha(Theme.text, 0.75)
                         Behavior on border.color { ColorAnimation { duration: 120 } }
 
                         Column {
@@ -403,10 +424,41 @@ Scope {
                                 layer.enabled: true
                                 layer.samples: 4
 
+                                // segment fill (no stroke): accent tint when focused
+                                ShapePath {
+                                    strokeWidth: 0
+                                    strokeColor: "transparent"
+                                    fillColor: seg.focused ? Theme.alpha(Theme.accent, 0.22)
+                                                           : (seg.active ? Theme.alpha(Theme.accent, 0.10)
+                                                                         : Theme.alpha(Theme.text, 0.06))
+                                    startX: wheel.width / 2 + Math.cos(seg.a0 * Math.PI / 180) * (seg.rad - seg.thick / 2)
+                                    startY: wheel.height / 2 + Math.sin(seg.a0 * Math.PI / 180) * (seg.rad - seg.thick / 2)
+                                    PathLine {
+                                        x: wheel.width / 2 + Math.cos(seg.a0 * Math.PI / 180) * (seg.rad + seg.thick / 2)
+                                        y: wheel.height / 2 + Math.sin(seg.a0 * Math.PI / 180) * (seg.rad + seg.thick / 2)
+                                    }
+                                    PathAngleArc {
+                                        moveToStart: false
+                                        centerX: wheel.width / 2; centerY: wheel.height / 2
+                                        radiusX: seg.rad + seg.thick / 2; radiusY: seg.rad + seg.thick / 2
+                                        startAngle: seg.a0; sweepAngle: seg.sweep
+                                    }
+                                    PathLine {
+                                        x: wheel.width / 2 + Math.cos((seg.a0 + seg.sweep) * Math.PI / 180) * (seg.rad - seg.thick / 2)
+                                        y: wheel.height / 2 + Math.sin((seg.a0 + seg.sweep) * Math.PI / 180) * (seg.rad - seg.thick / 2)
+                                    }
+                                    PathAngleArc {
+                                        moveToStart: false
+                                        centerX: wheel.width / 2; centerY: wheel.height / 2
+                                        radiusX: seg.rad - seg.thick / 2; radiusY: seg.rad - seg.thick / 2
+                                        startAngle: seg.a0 + seg.sweep; sweepAngle: -seg.sweep
+                                    }
+                                }
+
                                 ShapePath {
                                     fillColor: "transparent"
-                                    strokeWidth: 1.5
-                                    strokeColor: seg.focused ? Theme.accent : Theme.alpha(Theme.text, 0.5)
+                                    strokeWidth: seg.focused ? 2 : 1.5
+                                    strokeColor: seg.focused ? Theme.accent : Theme.alpha(Theme.text, 0.75)
                                     joinStyle: ShapePath.RoundJoin
                                     startX: wheel.width / 2 + Math.cos(seg.a0 * Math.PI / 180) * (seg.rad - seg.thick / 2)
                                     startY: wheel.height / 2 + Math.sin(seg.a0 * Math.PI / 180) * (seg.rad - seg.thick / 2)
@@ -432,8 +484,8 @@ Scope {
 
                                 ShapePath {
                                     fillColor: "transparent"
-                                    strokeWidth: 1.5
-                                    strokeColor: seg.focused ? Theme.accent : Theme.alpha(Theme.text, 0.5)
+                                    strokeWidth: seg.focused ? 2 : 1.5
+                                    strokeColor: seg.focused ? Theme.accent : Theme.alpha(Theme.text, 0.75)
 
                                     PathAngleArc {
                                         centerX: wheel.width / 2
@@ -453,7 +505,7 @@ Scope {
                                 font.family: root.iconFont
                                 font.pixelSize: 20
                                 // accent = toggle is ON, bright = hovered, dim = off
-                                color: seg.active ? Theme.accent : (seg.focused ? Theme.text : Theme.textDim)
+                                color: seg.active ? Theme.accent : (seg.focused ? Theme.text : Theme.alpha(Theme.text, 0.85))
                                 Behavior on color { ColorAnimation { duration: 120 } }
                             }
                         }

@@ -42,11 +42,11 @@ hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd("qs ipc call bar toggle")) --
 -- Clipboard
 hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("pgrep -x rofi >/dev/null && pkill -x rofi || cliphist list | rofi -dmenu -p '' | cliphist decode | wl-copy"))
 
--- Screenshot fullscreen
-hl.bind("Delete", hl.dsp.exec_cmd("sh -c 'file=" .. home .. "/Pictures/$(date +%s).png; grim \"$file\"; wl-copy < \"$file\"; qs ipc call screenshot notify \"$file\"'"))
+-- Screenshot fullscreen (Print Screen; upstream used Delete, which made Delete unusable)
+hl.bind("Print", hl.dsp.exec_cmd("sh -c 'file=" .. home .. "/Pictures/$(date +%s).png; grim \"$file\"; wl-copy < \"$file\"; qs ipc call screenshot notify \"$file\"'"))
 
--- Screenshot area select
-hl.bind("SHIFT + Delete", hl.dsp.exec_cmd(home .. "/.config/hypr/scripts/screenshot-area.sh"))
+-- Screenshot area select (Shift + Print Screen)
+hl.bind("SHIFT + Print", hl.dsp.exec_cmd(home .. "/.config/hypr/scripts/screenshot-area.sh"))
 
 -- Keyboard layout
 hl.bind(mainMod .. " + X", hl.dsp.exec_cmd("hyprctl switchxkblayout current next"))
