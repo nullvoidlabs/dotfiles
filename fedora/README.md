@@ -49,6 +49,7 @@ Config edits (all still work on Arch, so the patch stays rebase-friendly):
 - `.zshrc`: plugin paths checked for both `/usr/share/zsh/plugins/<name>` (Arch) and `/usr/share/<name>` (Fedora).
 - `quickshell/SettingsPages/StoragePage.qml`: YAY/PACMAN cache rows → one DNF CACHE row (`pkexec dnf clean all`).
 - `quickshell/hyprquickpaper/cache.sh`: prefers `magick` over the deprecated `convert`.
+- `hypr/hyprland.lua` autostart: imports the session environment into systemd/D-Bus and starts `hyprland-session.target` (installed from `fedora/systemd/` into `~/.config/systemd/user/`). Without it, `xdg-desktop-portal` fails with result `dependency` because `graphical-session.target` is never active under a bare Hyprland session. Apps then fall back to built-in file pickers (Enter doesn't save in Brave's) and screen sharing breaks.
 
 ## Known gaps
 

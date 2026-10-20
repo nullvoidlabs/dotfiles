@@ -268,6 +268,8 @@ for wp in "$REPO_DIR"/wallhaven-*.jpg; do
     [[ -f "$wp" && ! -e "$WALLPAPER_DIR/$(basename "$wp")" ]] && cp "$wp" "$WALLPAPER_DIR/"
 done
 
+install_session_units
+
 if command -v systemctl >/dev/null 2>&1; then
     systemctl --user enable --now pipewire.service pipewire-pulse.service wireplumber.service >/dev/null 2>&1 || true
     if rpm -q bluez >/dev/null 2>&1; then

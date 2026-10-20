@@ -1,0 +1,12 @@
+# Installed to ~/.config/systemd/user/ by fedora/install.sh and fedora/update.sh.
+#
+# Started from hyprland.lua at login. graphical-session.target can't be
+# started directly (RefuseManualStart), so this target binds it. Without it,
+# xdg-desktop-portal fails with result 'dependency' under Hyprland, and apps
+# fall back to built-in file pickers (Enter doesn't save) and lose screen share.
+[Unit]
+Description=Hyprland session
+Documentation=man:systemd.special(7)
+BindsTo=graphical-session.target
+Wants=graphical-session-pre.target
+After=graphical-session-pre.target

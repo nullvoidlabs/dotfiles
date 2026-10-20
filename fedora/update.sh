@@ -84,6 +84,8 @@ elif [[ "$DRY_RUN" -eq 0 ]]; then
 fi
 [[ "$SKIPPED_REAL_FILES" -gt 0 ]] && warning "$SKIPPED_REAL_FILES file(s) skipped; see warnings above."
 
+install_session_units "$DRY_RUN"
+
 if [[ "$DRY_RUN" -eq 1 ]]; then
     info "Dry run: nothing was written."
     exit 0

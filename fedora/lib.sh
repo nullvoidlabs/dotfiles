@@ -333,6 +333,33 @@ link_dotfiles() {
     done
 }
 
+# Copies fedora/systemd/*.target into ~/.config/systemd/user. Copied, not
+# symlinked: systemd would need `systemctl link`, and a copy keeps working if
+# the repo moves. A different existing file is backed up first.
+install_session_units() {
+    local dry="${1:-0}" unit_dir="$HOME/.config/systemd/user" src dest changed=0
+    for src in "$FEDORA_DIR"/systemd/*.target; do
+        [[ -f "$src" ]] || continue
+        dest="$unit_dir/$(basename "$src")"
+        cmp -s "$src" "$dest" && continue
+        if [[ "$dry" -eq 1 ]]; then
+            info "Would install systemd unit: $(basename "$src")"
+            continue
+        fi
+        mkdir -p "$unit_dir"
+        if [[ -e "$dest" ]]; then
+            mkdir -p "$HOME/.config-backups/systemd"
+            cp "$dest" "$HOME/.config-backups/systemd/$(basename "$src").$(date +%s)"
+        fi
+        cp "$src" "$dest"
+        changed=1
+        success "Installed systemd user unit: $(basename "$src")"
+    done
+    if [[ "$changed" -eq 1 ]]; then
+        systemctl --user daemon-reload 2>/dev/null || true
+    fi
+}
+
 run_theme() {
     if command -v python3 >/dev/null 2>&1; then
         python3 "$CONFIG_DIR/43pr/bin/theme.py" "$@"

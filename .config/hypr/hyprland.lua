@@ -12,7 +12,10 @@ browser    = "firefox" -- Fedora default; upstream uses "brave"
 ---- AUTOSTART ----
 
 hl.on("hyprland.start", function()
-    -- hl.exec_cmd("dunst") replaced with quickshell 
+    -- Pass the session env to systemd/D-Bus, then mark the graphical session
+    -- active so xdg-desktop-portal can start (file pickers, screen share).
+    hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP HYPRLAND_INSTANCE_SIGNATURE && systemctl --user start hyprland-session.target")
+    -- hl.exec_cmd("dunst") replaced with quickshell
     hl.exec_cmd("nm-applet")
     hl.exec_cmd("wl-paste --type text --watch cliphist store")
     hl.exec_cmd("wl-paste --type image --watch cliphist store")
