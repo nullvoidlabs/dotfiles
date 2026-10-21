@@ -16,6 +16,7 @@ If you like the setup, support the original author: [YouTube](https://www.youtub
 
 - [Requirements](#requirements)
 - [Install](#install)
+- [Backup and restore](#backup-and-restore)
 - [Updating](#updating)
 - [Keybinds that differ from upstream](#keybinds-that-differ-from-upstream)
 - [What's different from upstream](#whats-different-from-upstream)
@@ -49,14 +50,49 @@ Then log out. On the GDM login screen, click your name, then the gear icon, pick
 | `--with-brave` | Add Brave's official RPM repo and install `brave-browser` (Super + B prefers Brave, falls back to Firefox) |
 | `--with-hyprmod` | Also install [HyprMod](https://github.com/BlueManCZ/hyprmod), a GUI keybind/settings editor, via pipx |
 | `--skip-packages` | Only relink configs, install the systemd unit, regenerate the theme |
+| `--no-backup` | Don't offer to run `fedora/backup.sh` first |
 
 What the installer does:
 
+0. On a first install, offers to run [`fedora/backup.sh`](#backup-and-restore) so you can undo everything later.
 1. Asks before enabling third-party sources: COPR `nikromen/hyprland`, COPR `errornointernet/quickshell` (only if Fedora's repos lack Quickshell), Flathub for gpu-screen-recorder.
 2. Installs [`fedora/packages.txt`](packages.txt) with dnf. Each line may list alternatives; the first one available wins, and anything missing is reported at the end instead of aborting.
 3. Builds what Fedora doesn't package (matugen, starship, eza, cliphist) into `/usr/local/bin`, and fetches Nerd Fonts, papirus-folders and zsh-autocomplete.
 4. Symlinks `.config/` into `~/.config`, with backups to `~/.config-backups/<timestamp>/`.
 5. Installs `hyprland-session.target`, sets zsh as your login shell, sets default apps only where none are set, and generates the initial theme.
+
+## Backup and restore
+
+Take a backup **before** the first install (the installer offers to). It's what lets you go back to your old desktop cleanly.
+
+```bash
+./fedora/backup.sh               # --out DIR, --snapshot (btrfs snapshot of /home too)
+```
+
+It saves, to `~/43pr-backups/pre-43pr-<timestamp>/` plus a single `.tar.gz`:
+
+- every `~/.config` entry this repo manages, `~/.zshrc`, `~/.config/mimeapps.list`;
+- the fonts, zsh plugin and state folders the installer adds;
+- GNOME settings (`dconf dump /`) and your login shell;
+- installed packages, repo files, Flatpaks, `/usr/local/bin`, and the last dnf transaction ID.
+
+**Copy the `.tar.gz` off the machine** (NAS, another host, USB drive). Don't keep it inside `~/dotfiles`, and don't publish it: `dconf.ini` holds your GNOME settings.
+
+To go back:
+
+```bash
+./fedora/restore.sh                       # newest pre-install backup in ~/43pr-backups
+./fedora/restore.sh path/to/backup.tar.gz # or a specific one
+./fedora/restore.sh --configs-only        # files, settings, shell; leave packages alone
+```
+
+Each step asks first (`--yes` skips the prompts):
+
+1. **Configs**: current versions are moved to `~/43pr-backups/replaced-<timestamp>/`, never deleted, and the backed-up ones are unpacked. Anything that didn't exist before stays gone.
+2. **GNOME settings and login shell.**
+3. **Packages**: `sudo dnf history rollback <id>` to the recorded transaction. dnf lists every change and asks before applying, and the list includes anything else you installed since the backup. Then it removes COPRs and repo files added since, the Flatpak recorder, the tools built into `/usr/local/bin`, and resets papirus-folders.
+
+Then log out and pick GNOME. `~/dotfiles` itself is left alone; delete it when you're done.
 
 ## Updating
 

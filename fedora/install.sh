@@ -8,6 +8,7 @@
 #   --with-hyprmod   also install HyprMod (GUI keybind/settings editor) via pipx
 #   --with-brave     add Brave's official RPM repo and install brave-browser
 #   --skip-packages  only (re)link configs and regenerate the theme
+#   --no-backup      don't offer to run fedora/backup.sh first
 #
 # What it does (same end state as upstream install.sh on Arch):
 #   1. Enables the COPRs Fedora needs for Hyprland 0.56 + Quickshell
@@ -26,12 +27,14 @@ ASSUME_YES=0
 WITH_HYPRMOD=0
 WITH_BRAVE=0
 SKIP_PACKAGES=0
+NO_BACKUP=0
 for arg in "$@"; do
     case "$arg" in
         --yes|-y)        ASSUME_YES=1 ;;
         --with-hyprmod)  WITH_HYPRMOD=1 ;;
         --with-brave)    WITH_BRAVE=1 ;;
         --skip-packages) SKIP_PACKAGES=1 ;;
+        --no-backup)     NO_BACKUP=1 ;;
         -h|--help)       sed -n '2,20p' "$0"; exit 0 ;;
         *) error "Unknown option: $arg"; exit 1 ;;
     esac
@@ -54,6 +57,18 @@ if [[ "$FEDORA_VER" =~ ^[0-9]+$ && "$FEDORA_VER" -lt 43 ]]; then
     warning "Fedora $FEDORA_VER is older than what the Hyprland COPR builds for (43+)."
     warning "Hyprland 0.56 (needed for this config's .lua files) will probably not install."
     confirm "Continue anyway?" || exit 1
+fi
+
+# Offer a backup on first install (not when re-running on an installed system)
+if [[ "$NO_BACKUP" -eq 0 && ! -L "$CONFIG_DIR/hypr/hyprland.lua" ]] \
+    && ! compgen -G "$HOME/43pr-backups/pre-43pr-*" >/dev/null; then
+    info "No backup found. fedora/backup.sh saves your current configs, GNOME settings,"
+    info "login shell and package state so fedora/restore.sh can undo this install."
+    reply="y"
+    [[ "$ASSUME_YES" -eq 1 ]] || read -r -p "Create a backup first? [Y/n] " reply
+    if [[ ! "$reply" =~ ^[Nn]$ ]]; then
+        "$FEDORA_DIR/backup.sh" || { error "Backup failed; stopping. Use --no-backup to skip."; exit 1; }
+    fi
 fi
 
 BUILD_FAILED=()
