@@ -20,6 +20,7 @@ If you like the setup, support the original author: [YouTube](https://www.youtub
 - [Backup and restore](#backup-and-restore)
 - [Updating](#updating)
 - [Keybinds that differ from upstream](#keybinds-that-differ-from-upstream)
+- [Finding your way around the config](#finding-your-way-around-the-config)
 - [What's different from upstream](#whats-different-from-upstream)
 - [Living alongside GNOME](#living-alongside-gnome)
 - [Known issues](#known-issues)
@@ -133,6 +134,8 @@ Everything else matches [upstream's keybind table](../README.md#keybinds).
 | `Shift + Print` | — | Screenshot, area select |
 | `Delete` / `Shift + Delete` | Screenshots | Normal Delete |
 | `Fn + Brightness` | 5% steps | 2% steps |
+| `Super + Shift + T` | — | Light/dark theme toggle |
+| `Super + L` | Focus right **and** light/dark toggle (both fired) | Focus right only |
 | `Super + B` | `brave` (doesn't exist on Fedora) | Brave → Brave Flatpak → Firefox |
 | Touchpad, 2-finger **press** | Left click | Right click (3 fingers = middle) |
 | Touchpad scrolling | Traditional | Natural (content follows your fingers) |
@@ -140,6 +143,42 @@ Everything else matches [upstream's keybind table](../README.md#keybinds).
 **Super + S** (quick actions): the brightness item now responds to click/Enter (brighter) and right-click (dimmer) as well as scrolling.
 
 **Super + W** (wallpaper picker): ← / → (also H/L, A/D; hold Shift to move 3), Home / End, Enter or Space to apply, Esc or W to close. Click a tile to select it, click it again to apply.
+
+## Finding your way around the config
+
+Hyprland 0.55+ is configured in **Lua**, split across several files instead of one `hyprland.conf`. Everything below is in `~/dotfiles/.config/hypr/`. Edit it there (`~/.config/hypr/` points at the same files).
+
+| File | What's in it |
+|---|---|
+| `hyprland.lua` | Main file: programs (`terminal`, `browser`, ...), autostart, environment variables, input/touchpad; loads the others |
+| `keybinds.lua` | All keybinds |
+| `rules.lua` | Window rules: floating, opacity, sizes |
+| `look.lua` | Gaps, borders, blur, animations |
+| `monitors.lua` | Monitor layout, workspace-to-monitor rules |
+| `hyprlock.conf` | Lock screen (Super + Tab); hyprlock still uses the classic format |
+| `hyprland-gui.lua` | Written by HyprMod, if you use it; loaded last |
+| `scripts/` | Helpers the binds call: screenshots, opacity picker, recorder, wallpaper restore |
+| `.luarc.json` | Tells Lua editors that `hl` and the shared globals exist |
+
+Load order: `hyprland.lua` → Settings → Input state → `monitors` → `keybinds` → `look` → Settings → Appearance state → `rules` → `hyprland-gui`. Later files win when they set the same thing.
+
+**Settings saved from the desktop override these files.** They live outside the repo and are loaded on top:
+
+| Saved by | File | Overrides |
+|---|---|---|
+| Settings → Input | `~/.config/quickshell/state/devices.lua` | Touchpad and mouse options |
+| Settings → Appearance | `~/.config/quickshell/state/look.lua` | `look.lua` values |
+| Settings → Display | `~/.config/quickshell/state/display.lua` | Monitor layout |
+| Super + O | `~/.local/state/43pr/opacity` | Window opacity in `rules.lua` |
+
+If a config change seems to do nothing, check whether one of these sets the same option.
+
+Quick tips:
+
+- Apply changes with `hyprctl reload`. If the config has an error, Hyprland shows it on screen.
+- Find a bind: `grep -n '" + L"' ~/dotfiles/.config/hypr/keybinds.lua`.
+- Find a window's class for a rule: `hyprctl clients | grep class`, or `hyprctl activewindow`.
+- A bind looks like `hl.bind(mainMod .. " + SHIFT + T", hl.dsp.exec_cmd("command"))`. `..` joins strings in Lua; `--` starts a comment.
 
 ## What's different from upstream
 
@@ -188,7 +227,7 @@ GNOME and Hyprland share the same user settings: the GTK `settings.ini` files, `
 
 - **Cursor size.** Hyprland keeps `XCURSOR_SIZE=14`, which it snaps to the theme's nearest real size (24). GNOME draws vector cursors at the exact size, so the shared GTK value of 14 made GNOME's cursor tiny. The GTK files now say 24, which looks the same in Hyprland. Existing installs set to exactly 14 are migrated; other values are left alone.
 - **Default apps.** Set only where nothing is chosen yet: `.vv` → remote-viewer, `text/plain` → xed (if unset or calibre), browser → Brave (if unset or Firefox). They apply in GNOME too.
-- **Light/dark toggle (Super + L)** also switches GNOME's color scheme.
+- **Light/dark toggle (Super + Shift + T)** also switches GNOME's color scheme.
 - **nwg-look** writes to GNOME's settings. Changing the cursor size there changes GNOME too.
 
 ## Known issues
@@ -196,7 +235,6 @@ GNOME and Hyprland share the same user settings: the GTK `settings.ini` files, `
 - **Settings → Power** needs `powerprofilesctl`. Fedora Workstation uses tuned-ppd, which conflicts with power-profiles-daemon, and the installer won't swap them for you. To use the page: `sudo dnf swap tuned-ppd power-profiles-daemon && sudo systemctl enable --now power-profiles-daemon`.
 - **Settings → System RAM details** runs `sudo -n /usr/bin/dmidecode`, which needs a NOPASSWD sudoers rule (same as upstream). Only add one if you accept that trade-off.
 - **COPR in-between states.** `dnf upgrade` may skip `hyprtoolkit` / `hyprland-guiutils` ("conflicts" / "broken dependencies") right after the COPR maintainer bumps a library and before everything is rebuilt. dnf keeps the installed pair consistent; upgrade again in a few days. Don't use `--allowerasing`: `hyprland` requires `hyprland-guiutils`.
-- **Super + L** is bound twice upstream (light/dark toggle and focus-right), and both fire.
 - **First screen recording** with the Flatpak recorder asks for your password once (its capture helper needs root).
 - After `papirus-icon-theme` updates, re-run `papirus-folders -C white`.
 - **HyprMod** writes to `hypr/hyprland-gui.lua`, a tracked file, so its changes show up in `git status`.
