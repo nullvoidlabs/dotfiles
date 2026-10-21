@@ -4,7 +4,8 @@ A Fedora port of [43PR/dotfiles](https://github.com/43PR/dotfiles), a Hyprland +
 
 - makes it install and run on Fedora (dnf, COPRs, Flathub instead of pacman and the AUR);
 - fixes what a bare Hyprland session on Fedora doesn't do on its own (file pickers, file associations, cursor size shared with GNOME);
-- adds a handful of usability fixes found while daily-driving it (wallpaper picker, Super + S menu, keybinds, touchpad).
+- adds a handful of usability fixes found while daily-driving it (wallpaper picker, Super + S menu, keybinds, touchpad);
+- ships [backup and restore scripts](#backup-and-restore), so trying it out is reversible: your old configs, GNOME settings, login shell and packages can all be put back.
 
 Everything stays compatible with Arch, so the Fedora commits rebase cleanly onto new upstream work. Maintained by [NullVoidLabs](https://nullvoidlabs.io).
 
@@ -37,8 +38,11 @@ If you like the setup, support the original author: [YouTube](https://www.youtub
 ```bash
 git clone -b fedora https://github.com/nullvoidlabs/dotfiles.git ~/dotfiles
 cd ~/dotfiles
+./fedora/backup.sh --snapshot     # recommended: lets restore.sh undo everything later
 ./fedora/install.sh
 ```
+
+If you skip `backup.sh`, the installer offers to run it for you on a first install (without the btrfs snapshot). Either way, copy the backup's `.tar.gz` off the machine; see [Backup and restore](#backup-and-restore).
 
 Then log out. On the GDM login screen, click your name, then the gear icon, pick **Hyprland**, and log in. Put wallpapers in `~/Pictures/Wallpapers` and press **Super + W**.
 

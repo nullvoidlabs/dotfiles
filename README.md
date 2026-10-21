@@ -1,6 +1,6 @@
 > [!important]
 > **This is the Fedora port of [43PR/dotfiles](https://github.com/43PR/dotfiles).** The desktop is 43PR's work; this fork makes it install and run on Fedora and adds a few fixes.
-> **Fedora users: follow [fedora/README.md](fedora/README.md)** (install, what changed, keybind differences). The `main` branch mirrors upstream; the Fedora port lives on the `fedora` branch.
+> **Fedora users: follow [fedora/README.md](fedora/README.md)** (install, one-command backup and restore, what changed, keybind differences). The `main` branch mirrors upstream; the Fedora port lives on the `fedora` branch.
 > The rest of this page is upstream's README, with the screenshot keybinds updated for this fork.
 
 <div align="center">
