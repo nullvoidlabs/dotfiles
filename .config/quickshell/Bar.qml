@@ -839,7 +839,10 @@ Scope {
                             onPressed: { dotTip.suppressed = true; dotTip.shown = false; }
                             onClicked: mouse => {
                                 if (mouse.button === Qt.RightButton) root.openSettings();
-                                else dot.modelData.activate();
+                                // Quickshell's activate() sends the classic "workspace N"
+                                // dispatcher, which Hyprland's Lua config mode rejects
+                                // (scroll and the power menu already use Lua dispatch).
+                                else Hyprland.dispatch("hl.dsp.focus({ workspace = " + dot.modelData.id + " })");
                             }
                         }
 
