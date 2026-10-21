@@ -16,6 +16,7 @@ hl.on("hyprland.start", function()
     -- Pass the session env to systemd/D-Bus, then mark the graphical session
     -- active so xdg-desktop-portal can start (file pickers, screen share).
     hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP HYPRLAND_INSTANCE_SIGNATURE && systemctl --user start hyprland-session.target")
+    hl.exec_cmd("~/.config/hypr/scripts/ssh-agent.sh")
     -- hl.exec_cmd("dunst") replaced with quickshell
     hl.exec_cmd("nm-applet")
     hl.exec_cmd("wl-paste --type text --watch cliphist store")
@@ -30,6 +31,22 @@ hl.on("hyprland.start", function()
 end)
 
 ---- ENVIRONMENT VARIABLES ----
+
+-- SSH agent. GNOME points SSH_AUTH_SOCK at its agent; a Hyprland session
+-- started from GDM gets none, so ssh/git ask for the key passphrase every
+-- time. Use the same agent GNOME does (gcr-ssh-agent, Fedora's default) so
+-- keys unlocked in either session behave the same; plain ssh-agent if gcr
+-- isn't installed. scripts/ssh-agent.sh starts whichever one this picks.
+if not os.getenv("SSH_AUTH_SOCK") then
+    local rt = os.getenv("XDG_RUNTIME_DIR") or "/tmp"
+    local gcr = io.open("/usr/lib/systemd/user/gcr-ssh-agent.socket", "r")
+    if gcr then
+        gcr:close()
+        hl.env("SSH_AUTH_SOCK", rt .. "/gcr/ssh")
+    else
+        hl.env("SSH_AUTH_SOCK", rt .. "/ssh-agent.socket")
+    end
+end
 
 hl.env("XCURSOR_SIZE", "14")
 hl.env("QT_QPA_PLATFORM", "wayland")

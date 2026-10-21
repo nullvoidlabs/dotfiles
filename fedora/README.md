@@ -201,6 +201,7 @@ Quick tips:
 ### Session fixes for Fedora
 
 - **Portals (file pickers, screen sharing).** Under a Hyprland session started straight from GDM, `graphical-session.target` is never active, so `xdg-desktop-portal` fails with result `dependency`. Apps then fall back to their built-in file pickers (in Brave, Enter didn't save) and screen sharing breaks. `fedora/systemd/hyprland-session.target` binds that target, and `hyprland.lua` imports the session environment and starts it at login.
+- **SSH agent.** GNOME sets `SSH_AUTH_SOCK` to its agent; a Hyprland session from GDM got none, so `ssh` and `git push` asked for the key passphrase every time. `hyprland.lua` now points at the same agent GNOME uses (`gcr-ssh-agent`), or plain `ssh-agent` if gcr isn't installed, and `scripts/ssh-agent.sh` starts it.
 - **Polkit agent.** Upstream launched `/usr/lib/polkit-kde-authentication-agent-1`, which isn't in its own package list. The fork uses `hyprpolkitagent` at the Fedora path, with the Arch path as fallback.
 - **File types.** Outside GNOME/KDE, `xdg-open` falls back to content sniffing, so text-based files like Proxmox SPICE `.vv` looked like `text/plain` and opened in calibre. `perl-File-MimeInfo` lets it match by extension.
 - **zsh plugins** are looked up at both the Arch (`/usr/share/zsh/plugins/<name>`) and Fedora (`/usr/share/<name>`) paths.
@@ -248,6 +249,8 @@ GNOME and Hyprland share the same user settings: the GTK `settings.ini` files, `
 | Tiny cursor in GNOME | `gsettings reset org.gnome.desktop.interface cursor-size` |
 | Wallpaper picker tiles stuck on "Caching" | Settings → Storage → Wallpaper picker → Clear, then reopen with Super + W |
 | Touchpad setting ignored | Settings → Input overrides `hyprland.lua` (it's saved in `~/.config/quickshell/state/devices.lua`) |
+| `ssh`/`git` asks for the key passphrase every time | `echo $SSH_AUTH_SOCK; ssh-add -l` (empty, or "Could not open a connection" = no agent; log out and back in after updating) |
+| `git push` asks for a username | The clone uses HTTPS: `git remote set-url origin git@github.com:<you>/dotfiles.git` |
 | Which window has focus | `sleep 5; hyprctl activewindow \| grep -E 'class\|title'` |
 
 ## Security notes
