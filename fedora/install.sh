@@ -300,6 +300,7 @@ done
 
 install_session_units
 install_zsh_autocomplete
+enable_ssh_agent
 fix_gtk_cursor_size
 set_default_apps
 

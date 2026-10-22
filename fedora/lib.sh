@@ -444,6 +444,19 @@ install_zsh_autocomplete() {
     fi
 }
 
+# gcr-ssh-agent.socket ships disabled (GNOME starts it itself). Enable it so the
+# agent hyprland.lua points SSH_AUTH_SOCK at is listening from login on, even
+# before scripts/ssh-agent.sh runs (or if that script isn't linked yet).
+enable_ssh_agent() {
+    systemctl --user cat gcr-ssh-agent.socket >/dev/null 2>&1 || return 0
+    systemctl --user is-enabled -q gcr-ssh-agent.socket 2>/dev/null && return 0
+    if systemctl --user enable --now gcr-ssh-agent.socket >/dev/null 2>&1; then
+        success "Enabled gcr-ssh-agent.socket (SSH agent for the Hyprland session)."
+    else
+        warning "Could not enable gcr-ssh-agent.socket."
+    fi
+}
+
 run_theme() {
     if command -v python3 >/dev/null 2>&1; then
         python3 "$CONFIG_DIR/43pr/bin/theme.py" "$@"
