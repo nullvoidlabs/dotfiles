@@ -271,7 +271,7 @@ Item {
             cmds.push("hyprctl eval '" + monitorLua(m, { mode: mode, position: pos, scale: fixedScale(m) }) + "'")
             x += logicalWidth(m)
         }
-        if (ordered.length > 0) cmds.push("hyprctl dispatch focusmonitor '" + ordered[0].name + "'")
+        if (ordered.length > 0) cmds.push("hyprctl dispatch 'hl.dsp.focus({ monitor = \"" + ordered[0].name + "\" })'")  // Lua-mode dispatch; the classic `focusmonitor` is rejected
         return cmds
     }
 

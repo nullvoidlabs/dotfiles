@@ -2,7 +2,7 @@
 # 43PR/dotfiles installer — Fedora port
 #
 # Usage:
-#   ./fedora/install.sh [--yes] [--with-hyprmod] [--skip-packages]
+#   ./fedora/install.sh [--yes] [--with-brave] [--with-hyprmod] [--skip-packages] [--no-backup]
 #
 #   --yes            don't ask before enabling COPRs / Flathub
 #   --with-hyprmod   also install HyprMod (GUI keybind/settings editor) via pipx

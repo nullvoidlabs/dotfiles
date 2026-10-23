@@ -216,6 +216,11 @@ Quick tips:
   - Keyboard navigation works. The arrow keys used to move a different internal index than the highlight, so Space could apply the wrong wallpaper.
   - Clear selection: full brightness, a white frame and the file name; the rest are dimmed. The frame color was `transparent`.
   - Less lag: tile shadows render at quarter resolution, thumbnail generation runs one copy at a time, capped at CPU count with one thread per job, with atomic writes, `.webp` support and stale-thumbnail cleanup.
+- **Upstream Lua-migration bugs** (Hyprland's Lua config rejects old-style dispatch strings and has different defaults):
+  - Workspace dots in the bar: left-click switches workspace again.
+  - Super + Ctrl + H/J/K/L resizes the window; it used to set an absolute size of -40×0 because `hl.dsp.window.resize` defaults to `relative = false`.
+  - Settings → Display: "set as main monitor" focuses the new main monitor (`focusmonitor` → `hl.dsp.focus({ monitor = ... })`).
+- **Session teardown**: on exit, Hyprland stops `hyprland-session.target`, so the portals don't linger with stale settings if you log into GNOME right after.
 - **Quick actions (Super + S)**: a soft dim behind it, a backdrop disc, filled segments and stronger lines, so it reads over busy windows. Same thin-line look, theme colors only.
 - **Opacity (Super + O)** saves to `~/.local/state/43pr/opacity` instead of rewriting `hypr/rules.lua`, so changing it doesn't leave the repo modified. The default stays 70%.
 - **Thunar drag-select box** is a faint tint with an outline. Upstream's GTK CSS gave every `.view` an opaque background, and the selection box inherited it, hiding the files underneath.

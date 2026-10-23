@@ -59,8 +59,11 @@ fi
 # Default: newest backup taken BEFORE the port was installed (a backup made
 # afterwards mostly holds links to the repo), else the newest of any.
 if [[ -z "$BACKUP" ]]; then
-    for d in $(ls -1d "$HOME"/43pr-backups/pre-43pr-*/ 2>/dev/null | sort -r); do
-        d="${d%/}"
+    shopt -s nullglob
+    candidates=("$HOME"/43pr-backups/pre-43pr-*/)
+    shopt -u nullglob
+    for (( i = ${#candidates[@]} - 1; i >= 0; i-- )); do   # glob is sorted; timestamps sort by time
+        d="${candidates[i]%/}"
         [[ -z "$BACKUP" ]] && BACKUP="$d"
         if grep -q '^already_installed=0$' "$d/manifest.env" 2>/dev/null; then BACKUP="$d"; break; fi
     done
@@ -159,13 +162,23 @@ if [[ "$CONFIGS_ONLY" -eq 0 ]]; then
     fi
 
     last_id="$(cat "$B/dnf-last-id.txt" 2>/dev/null)"
+    # Rolling back removes zsh if the backup predates it. If zsh is still the
+    # login shell, that would leave an account GDM can't log into.
+    cur_shell="$(getent passwd "$USER" | cut -d: -f7)"
+    if [[ "$last_id" =~ ^[0-9]+$ && "$(basename "$cur_shell")" == "zsh" ]] \
+        && [[ -f "$B/packages.txt" ]] && ! grep -qx zsh "$B/packages.txt"; then
+        warning "Your login shell is zsh, but zsh wasn't installed at backup time, so the rollback would remove it."
+        warning "Skipping the package rollback. Change your shell first (re-run and accept the login-shell step,"
+        warning "or: sudo usermod --shell /bin/bash $USER), then run restore.sh again."
+        last_id=""
+    fi
     if [[ "$last_id" =~ ^[0-9]+$ ]]; then
         info "Package rollback: undoes every dnf transaction after #$last_id."
         info "Review dnf's list before answering: it includes anything else you installed since the backup."
         if confirm "Run 'sudo dnf history rollback $last_id'?"; then
             sudo dnf history rollback "$last_id" || warning "Rollback failed or was cancelled."
         fi
-    else
+    elif [[ ! -s "$B/dnf-last-id.txt" ]]; then
         warning "No dnf transaction ID in the backup; skipping package rollback."
     fi
 

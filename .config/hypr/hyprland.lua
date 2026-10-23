@@ -30,6 +30,13 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("sleep 2 && QSG_RENDER_LOOP=basic qs")
 end)
 
+-- On exit, end the systemd graphical session started above. Otherwise
+-- graphical-session.target (and the portals bound to it) stays up with this
+-- session's WAYLAND_DISPLAY when you log straight into GNOME afterwards.
+hl.on("hyprland.shutdown", function()
+    os.execute("systemctl --user --no-block stop hyprland-session.target")
+end)
+
 ---- ENVIRONMENT VARIABLES ----
 
 -- SSH agent. GNOME points SSH_AUTH_SOCK at its agent; a Hyprland session

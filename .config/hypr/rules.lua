@@ -89,6 +89,6 @@ hl.window_rule({
     match = { class = "^(org\\.gnome\\.Loupe|org\\.gnome\\.eog|eog|org\\.xfce\\.ristretto|ristretto|org\\.gnome\\.gThumb|gthumb|imv|feh|qimgv|org\\.gnome\\.NautilusPreviewer)$" },
     float = true,
     center = true,
-    size = "70% 75%",
+    size = "monitor_w*0.7 monitor_h*0.75",   -- rule sizes are expressions; "70%" isn't valid
     opacity = "1.0 override",
 })
